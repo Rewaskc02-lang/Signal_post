@@ -119,6 +119,6 @@ source .venv/bin/activate
 # Install package and test dependencies
 pip install -e ".[dev]"
 
-# Run full offline test suite (75 tests, zero network calls)
+# Run full offline test suite (80 tests, zero network calls)
 pytest -v
 ```
