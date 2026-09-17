@@ -1,0 +1,163 @@
+{
+  "orgnr": "936483267",
+  "facts": [
+    {
+      "field_name": "legal_name",
+      "value": "FLEXIROM AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_code",
+      "value": "AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_description",
+      "value": "Aksjeselskap",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "registration_date",
+      "value": "2025-10-30",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": "2025-10-30",
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_code",
+      "value": "68.200",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_description",
+      "value": "Utleie av egen eller leid fast eiendom",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "business_address",
+      "value": {
+        "street": "Haralds vei 12",
+        "postal_code": "1470",
+        "city": "LØRENSKOG",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "LØRENSKOG",
+        "municipality_code": "3222"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "vat_registered",
+      "value": false,
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "status",
+      "value": "active",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936483267",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "428d01137d74edd496c88c3e2f2480088114e81fd0ff5ebbbe35825c5e641823",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "ordinary_result_before_tax",
+      "value": 6.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936483267",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "ca2df39fa0650ed89ee8ebe417ba8c41d2012771aaf70fb6ce7ea6db1e88995e",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 23506.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936483267",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:13:20.273877Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "ca2df39fa0650ed89ee8ebe417ba8c41d2012771aaf70fb6ce7ea6db1e88995e",
+      "extraction_method": "official_api"
+    }
+  ],
+  "last_checked": "2026-09-17T14:13:20.274073Z",
+  "last_changed": "2026-09-17T14:13:20.274073Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available"
+  },
+  "executive_summary": "FLEXIROM AS is a Norwegian Aksjeselskap (org. nr. 936483267) currently with 'active' legal status. The company's primary registered activity is utleie av egen eller leid fast eiendom. No annual accounts or employee records are currently filed in public registries."
+}

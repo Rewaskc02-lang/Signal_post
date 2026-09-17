@@ -1,0 +1,163 @@
+{
+  "orgnr": "911934051",
+  "facts": [
+    {
+      "field_name": "legal_name",
+      "value": "GIMSØY SPISERI AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_code",
+      "value": "AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_description",
+      "value": "Aksjeselskap",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "registration_date",
+      "value": "2013-05-13",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": "2013-05-13",
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_code",
+      "value": "56.110",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_description",
+      "value": "Drift av restauranter",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "business_address",
+      "value": {
+        "street": "Gimsøy plass 7",
+        "postal_code": "3730",
+        "city": "SKIEN",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "SKIEN",
+        "municipality_code": "4003"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "phone",
+      "value": "905 16 730",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "vat_registered",
+      "value": false,
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "status",
+      "value": "active",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/911934051",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7e3fd7d0fb477dcd81df57282f6cd93529acd8cf79b5f76decb9f3bab3f7f2d9",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": -475999.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/911934051",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:13:15.212337Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "4b8b4c6e1e743b59065071d7b520ef0419a20c81f9a8ef097d2bfa4602e7d07d",
+      "extraction_method": "official_api"
+    }
+  ],
+  "last_checked": "2026-09-17T14:13:15.212525Z",
+  "last_changed": "2026-09-17T14:13:15.212525Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available"
+  },
+  "executive_summary": "GIMSØY SPISERI AS is a Norwegian Aksjeselskap (org. nr. 911934051) currently with 'active' legal status. The company's primary registered activity is drift av restauranter. No annual accounts or employee records are currently filed in public registries."
+}

@@ -1,0 +1,171 @@
+{
+  "orgnr": "936783058",
+  "facts": [
+    {
+      "field_name": "legal_name",
+      "value": "MK GULVLEGGING AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_code",
+      "value": "AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_description",
+      "value": "Aksjeselskap",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "registration_date",
+      "value": "2025-12-16",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": "2025-12-16",
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_code",
+      "value": "43.330",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_description",
+      "value": "Gulvlegging og tapetsering",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "business_address",
+      "value": {
+        "street": "Thomas Heftyes gate 52",
+        "postal_code": "0267",
+        "city": "OSLO",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "OSLO",
+        "municipality_code": "0301"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "postal_address",
+      "value": {
+        "street": "Steinveien 4",
+        "postal_code": "3472",
+        "city": "BØDALEN",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "ASKER",
+        "municipality_code": "3203"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "vat_registered",
+      "value": false,
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "status",
+      "value": "active",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936783058",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "a596e8ace34cb04f56c88a41d212c419562630f2fdd74c572ed3239b42bbef44",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 23500.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936783058",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:12:57.054034Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "d1422033fee1606127bcde23e24c42b3f9d1de1012c9699ef4b3e44efd60e5e3",
+      "extraction_method": "official_api"
+    }
+  ],
+  "last_checked": "2026-09-17T14:12:57.054377Z",
+  "last_changed": "2026-09-17T14:12:57.054377Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available"
+  },
+  "executive_summary": "MK GULVLEGGING AS is a Norwegian Aksjeselskap (org. nr. 936783058) currently with 'active' legal status. The company's primary registered activity is gulvlegging og tapetsering. No annual accounts or employee records are currently filed in public registries."
+}

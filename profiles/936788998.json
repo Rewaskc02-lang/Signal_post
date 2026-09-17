@@ -1,0 +1,150 @@
+{
+  "orgnr": "936788998",
+  "facts": [
+    {
+      "field_name": "legal_name",
+      "value": "BAKKALY HOLDING AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_code",
+      "value": "AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_description",
+      "value": "Aksjeselskap",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "registration_date",
+      "value": "2025-12-17",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": "2025-12-17",
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_code",
+      "value": "00.000",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_description",
+      "value": "Uoppgitt",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "business_address",
+      "value": {
+        "street": "Juulenga 4B",
+        "postal_code": "6516",
+        "city": "KRISTIANSUND N",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "KRISTIANSUND",
+        "municipality_code": "1505"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "vat_registered",
+      "value": false,
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "status",
+      "value": "active",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936788998",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "7ba345671d7486280090f8fbbddbea67f88e46e0b184a05fc7c71c6e5ab9f140",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 12639869.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936788998",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:13:18.198166Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "361c142fc3d8292fd2f9662dd4faa2b58a22134acd10fb709005a96ad25c2f86",
+      "extraction_method": "official_api"
+    }
+  ],
+  "last_checked": "2026-09-17T14:13:18.198280Z",
+  "last_changed": "2026-09-17T14:13:18.198280Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available"
+  },
+  "executive_summary": "BAKKALY HOLDING AS is a Norwegian Aksjeselskap (org. nr. 936788998) currently with 'active' legal status. The company's primary registered activity is uoppgitt. No annual accounts or employee records are currently filed in public registries."
+}

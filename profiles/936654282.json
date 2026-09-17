@@ -1,0 +1,150 @@
+{
+  "orgnr": "936654282",
+  "facts": [
+    {
+      "field_name": "legal_name",
+      "value": "TM CAPITAL AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_code",
+      "value": "AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_description",
+      "value": "Aksjeselskap",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "registration_date",
+      "value": "2025-12-08",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": "2025-12-08",
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_code",
+      "value": "00.000",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_description",
+      "value": "Uoppgitt",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "business_address",
+      "value": {
+        "street": "Austvikvegen 2D",
+        "postal_code": "6906",
+        "city": "FLORØ",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "KINN",
+        "municipality_code": "4602"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "vat_registered",
+      "value": false,
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "status",
+      "value": "active",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936654282",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "48d7d7050b315f4ed2f09ca212d1b75681d819828760ec0fb16dd05ad6f4777c",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 454000.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936654282",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:12:58.292641Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "ae991d9c8d59d741a9588b01a1f8031779dec7f324ed6472453ce95a9b7fe568",
+      "extraction_method": "official_api"
+    }
+  ],
+  "last_checked": "2026-09-17T14:12:58.292797Z",
+  "last_changed": "2026-09-17T14:12:58.292797Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available"
+  },
+  "executive_summary": "TM CAPITAL AS is a Norwegian Aksjeselskap (org. nr. 936654282) currently with 'active' legal status. The company's primary registered activity is uoppgitt. No annual accounts or employee records are currently filed in public registries."
+}

@@ -1,0 +1,163 @@
+{
+  "orgnr": "924509570",
+  "facts": [
+    {
+      "field_name": "legal_name",
+      "value": "ALAT AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_code",
+      "value": "AS",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "org_form_description",
+      "value": "Aksjeselskap",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "registration_date",
+      "value": "2020-01-30",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": "2020-01-30",
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_code",
+      "value": "00.000",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "nace_description",
+      "value": "Uoppgitt",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "business_address",
+      "value": {
+        "street": "Vågsbotn 9B",
+        "postal_code": "5131",
+        "city": "NYBORG",
+        "country": "Norge",
+        "country_code": "NO",
+        "municipality": "BERGEN",
+        "municipality_code": "4601"
+      },
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "vat_registered",
+      "value": false,
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "status",
+      "value": "active",
+      "unit": null,
+      "source_name": "Brønnøysundregistrene – Enhetsregisteret",
+      "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/924509570",
+      "as_of": null,
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "551be0344584788186acf1f5535702dfab38b809e76bb57716982ad7d249a1bd",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "ordinary_result_before_tax",
+      "value": 3.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/924509570",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "5ae107131954a79897f3f88dca3dfa22200c3dfdbaa12bc5dfe0955afe6bf5a8",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 704466.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/924509570",
+      "as_of": "2025-12-31",
+      "retrieved_at": "2026-09-17T14:12:50.668525Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "5ae107131954a79897f3f88dca3dfa22200c3dfdbaa12bc5dfe0955afe6bf5a8",
+      "extraction_method": "official_api"
+    }
+  ],
+  "last_checked": "2026-09-17T14:12:50.668634Z",
+  "last_changed": "2026-09-17T14:12:50.668634Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available"
+  },
+  "executive_summary": "ALAT AS is a Norwegian Aksjeselskap (org. nr. 924509570) currently with 'active' legal status. The company's primary registered activity is uoppgitt. No annual accounts or employee records are currently filed in public registries."
+}
