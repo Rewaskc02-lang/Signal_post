@@ -28,11 +28,13 @@ class Settings(BaseSettings):
     # Storage Settings
     sqlite_db_path: str = "signalpost.db"
 
-    # Explanation & LLM Settings
+    # API Keys & LLM Settings
+    openrouter_api_key: str | None = None
+    breeth_api_key: str | None = None
     enable_llm_summary: bool = False
-    llm_provider: str = "gemini"
+    llm_provider: str = "openrouter"
     llm_api_key: str | None = None
-    llm_model: str = "gemini-2.5-flash"
+    llm_model: str = "google/gemini-2.5-flash"
 
 
 # Default global settings instance

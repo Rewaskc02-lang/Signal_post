@@ -81,6 +81,8 @@ def test_storage_fact_history_recording(temp_storage: Storage) -> None:
             confidence="official",
             status="new",
             old_value_json=None,
+            content_hash="abc123hash",
+            extraction_method="official_api",
             recorded_at=now,
         ),
         FactHistoryEntry(
@@ -94,6 +96,8 @@ def test_storage_fact_history_recording(temp_storage: Storage) -> None:
             confidence="official",
             status="changed",
             old_value_json="50000000.0",
+            content_hash="def456hash",
+            extraction_method="official_api",
             recorded_at=now,
         ),
     ]
@@ -104,4 +108,7 @@ def test_storage_fact_history_recording(temp_storage: Storage) -> None:
     assert len(history) == 2
     assert history[0].status == "changed"
     assert history[0].old_value_json == "50000000.0"
+    assert history[0].content_hash == "def456hash"
+    assert history[0].extraction_method == "official_api"
     assert history[1].status == "new"
+    assert history[1].content_hash == "abc123hash"

@@ -8,9 +8,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "org_form_code",
@@ -19,9 +21,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "org_form_description",
@@ -30,9 +34,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "registration_date",
@@ -41,9 +47,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": "1995-03-12",
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "nace_code",
@@ -52,9 +60,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "nace_description",
@@ -63,9 +73,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "business_address",
@@ -82,9 +94,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "postal_address",
@@ -101,9 +115,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "employee_count",
@@ -112,9 +128,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "website",
@@ -123,9 +141,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "phone",
@@ -134,9 +154,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "vat_registered",
@@ -145,9 +167,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "status",
@@ -156,9 +180,11 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
       "as_of": null,
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "895221578d61c1fb770216c9186ed034a7414473a45505ff3a919c5e055e07c9",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "revenue",
@@ -167,9 +193,11 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "61d5ac47c3bd5e9886d2ce88255b7571c32e6c22b705e4f8348ec97a6f46d4ef",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "operating_result",
@@ -178,9 +206,11 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "61d5ac47c3bd5e9886d2ce88255b7571c32e6c22b705e4f8348ec97a6f46d4ef",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "ordinary_result_before_tax",
@@ -189,9 +219,11 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "61d5ac47c3bd5e9886d2ce88255b7571c32e6c22b705e4f8348ec97a6f46d4ef",
+      "extraction_method": "official_api"
     },
     {
       "field_name": "equity",
@@ -200,12 +232,32 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/923609016",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-16T10:47:05.342226Z",
+      "retrieved_at": "2026-09-16T20:19:52.446761Z",
       "confidence": "official",
-      "confidence_level": 1.0
+      "confidence_level": 1.0,
+      "content_hash": "61d5ac47c3bd5e9886d2ce88255b7571c32e6c22b705e4f8348ec97a6f46d4ef",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "website_description",
+      "value": "We are an international energy company headquartered in Norway, around 25,000 employees and with offices in more than 20 countries worldwide.",
+      "unit": null,
+      "source_name": "Company Website",
+      "source_url": "https://www.equinor.com",
+      "as_of": "2026-09-17",
+      "retrieved_at": "2026-09-16T20:19:52.447888Z",
+      "confidence": "unverified_secondary",
+      "confidence_level": 1.0,
+      "content_hash": "886fe4a553b8da9d6e979fd20791676b416cc9c74f04610a23fd54adf42c1eab",
+      "extraction_method": "html_meta"
     }
   ],
-  "last_checked": "2026-09-16T10:47:05.342556Z",
-  "last_changed": "2026-09-16T10:47:05.342556Z",
-  "executive_summary": "EQUINOR ASA is a Norwegian Allmennaksjeselskap (org. nr. 923609016) currently with 'active' legal status. The company's primary registered activity is utvinning av råolje. Latest registry records indicate 21,272 registered employees and revenue of 67,956,000,000 USD for fiscal year 2025."
+  "last_checked": "2026-09-16T20:19:53.361460Z",
+  "last_changed": "2026-09-16T20:19:53.361460Z",
+  "source_statuses": {
+    "enhetsregisteret": "available",
+    "regnskapsregisteret": "available",
+    "website": "available"
+  },
+  "executive_summary": "EQUINOR ASA is an active Norwegian public limited company (Allmennaksjeselskap) registered on March 12, 1995, with 21,272 employees. The company's business activity is crude petroleum extraction, and its business address is Forusbeen 50, 4035 STAVANGER, Norway. For the fiscal year ending December 31, 2025, EQUINOR ASA reported a revenue of 67,956,000,000.0 USD, an operating result of 5,563,000,000.0 USD, and equity of 39,182,000,000.0 USD."
 }

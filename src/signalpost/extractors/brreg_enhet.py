@@ -1,5 +1,5 @@
-"""Extractor for core company data from Brønnøysundregistrene (Enhetsregisteret)."""
-
+import hashlib
+import json
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -55,6 +55,7 @@ def extract_enhet_facts(
     raw_data: dict[str, Any],
     endpoint_url: str,
     retrieved_at: datetime | None = None,
+    content_hash: str | None = None,
 ) -> list[CompanyFact]:
     """Extract official CompanyFact objects from an Enhetsregisteret response payload.
 
@@ -62,12 +63,20 @@ def extract_enhet_facts(
         raw_data: The raw JSON dictionary returned by Brreg Enhetsregisteret.
         endpoint_url: The exact URL that was queried.
         retrieved_at: Timestamp when data was retrieved (defaults to UTC now).
+        content_hash: Optional precomputed SHA-256 hash of the response content.
 
     Returns:
         List of CompanyFact instances with full provenance and confidence='official'.
     """
     facts: list[CompanyFact] = []
     fetch_time = retrieved_at or datetime.now(timezone.utc)
+
+    # Compute SHA-256 content hash of the raw response payload if not provided
+    if content_hash:
+        hash_digest = content_hash
+    else:
+        payload_bytes = json.dumps(raw_data, sort_keys=True, default=str).encode("utf-8")
+        hash_digest = hashlib.sha256(payload_bytes).hexdigest()
 
     # Base helper to append fact with standard provenance
     def add_fact(
@@ -87,6 +96,8 @@ def extract_enhet_facts(
                     as_of=as_of,
                     retrieved_at=fetch_time,
                     confidence="official",
+                    content_hash=hash_digest,
+                    extraction_method="official_api",
                 )
             )
 
@@ -152,5 +163,10 @@ def extract_enhet_facts(
     # 12. Current Status
     status = determine_status(raw_data)
     add_fact("status", status)
+
+    # 13. Labeled Relationship: Parent Unit (Overordnet enhet)
+    # Stored as an explicit labeled relationship fact, NOT merged into company facts
+    if parent_orgnr := raw_data.get("overordnetEnhet"):
+        add_fact("parent_orgnr", str(parent_orgnr).strip())
 
     return facts

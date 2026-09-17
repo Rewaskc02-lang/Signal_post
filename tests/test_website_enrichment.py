@@ -2,7 +2,6 @@
 
 import pytest
 import respx
-import httpx
 
 from signalpost.extractors.website_enrichment import (
     enrich_from_website,
@@ -115,3 +114,40 @@ async def test_enrich_from_website_respects_robots_txt() -> None:
         facts = await enrich_from_website(website, orgnr, legal_name)
 
     assert len(facts) == 0
+
+
+@pytest.mark.asyncio
+async def test_enrich_from_website_with_status_explicit_states() -> None:
+    from signalpost.extractors.website_enrichment import enrich_from_website_with_status
+
+    orgnr = "923609016"
+    legal_name = "EQUINOR ASA"
+
+    # 1. Blocked via robots.txt
+    with respx.mock() as respx_mock:
+        respx_mock.get("https://www.blocked.com/robots.txt").respond(status_code=200, text="User-agent: *\nDisallow: /")
+        facts, status = await enrich_from_website_with_status("https://www.blocked.com", orgnr, legal_name)
+    assert len(facts) == 0
+    assert status == "blocked"
+
+    # 2. Ambiguous (no identity proof found)
+    with respx.mock(assert_all_called=False) as respx_mock:
+        respx_mock.get("https://www.ambiguous.com/robots.txt").respond(status_code=200, text="User-agent: *\nAllow: /")
+        respx_mock.get("https://www.ambiguous.com").respond(status_code=200, text="<html>No proof</html>", headers={"content-type": "text/html"})
+        for p in ["/om-oss", "/om", "/about", "/about-us", "/kontakt", "/contact"]:
+            respx_mock.get(f"https://www.ambiguous.com{p}").respond(status_code=404)
+        facts, status = await enrich_from_website_with_status("https://www.ambiguous.com", orgnr, legal_name)
+    assert len(facts) == 0
+    assert status == "ambiguous"
+
+    # 3. Available (verified with content hash)
+    html = '<html><head><meta name="description" content="Official site."></head><body>NO 923609016 MVA</body></html>'
+    with respx.mock() as respx_mock:
+        respx_mock.get("https://www.verified.com/robots.txt").respond(status_code=200, text="User-agent: *\nAllow: /")
+        respx_mock.get("https://www.verified.com").respond(status_code=200, text=html, headers={"content-type": "text/html"})
+        facts, status = await enrich_from_website_with_status("https://www.verified.com", orgnr, legal_name)
+    assert len(facts) == 1
+    assert status == "available"
+    assert facts[0].content_hash is not None
+    assert len(facts[0].content_hash) == 64
+    assert facts[0].extraction_method == "html_meta"

@@ -125,6 +125,8 @@ def diff_and_update_profile(
                     confidence=current_fact.confidence,
                     status="new",
                     old_value_json=None,
+                    content_hash=current_fact.content_hash,
+                    extraction_method=current_fact.extraction_method,
                     recorded_at=check_time,
                 )
             )
@@ -155,12 +157,14 @@ def diff_and_update_profile(
                     confidence=current_fact.confidence,
                     status="changed",
                     old_value_json=json.dumps(prev_fact.value, default=str),
+                    content_hash=current_fact.content_hash,
+                    extraction_method=current_fact.extraction_method,
                     recorded_at=check_time,
                 )
             )
 
         else:
-            # 3. Value unchanged -> CONFIRMED
+            # 3. Value identical -> CONFIRMED
             status = "confirmed"
             confirmed_count += 1
             change = FactChange(
@@ -184,7 +188,9 @@ def diff_and_update_profile(
                     source_url=current_fact.source_url,
                     confidence=current_fact.confidence,
                     status="confirmed",
-                    old_value_json=json.dumps(prev_fact.value, default=str),
+                    old_value_json=None,
+                    content_hash=current_fact.content_hash,
+                    extraction_method=current_fact.extraction_method,
                     recorded_at=check_time,
                 )
             )
@@ -203,6 +209,7 @@ def diff_and_update_profile(
         facts=current_profile.facts,
         last_checked=check_time,
         last_changed=last_changed,
+        source_statuses=current_profile.source_statuses,
     )
 
     summary = ProfileUpdateSummary(

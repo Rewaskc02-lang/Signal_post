@@ -13,7 +13,10 @@ from signalpost.brreg_client import (
 from signalpost.config import Settings, settings as default_settings
 from signalpost.extractors.brreg_enhet import extract_enhet_facts
 from signalpost.extractors.brreg_regnskap import extract_regnskap_facts
-from signalpost.extractors.website_enrichment import enrich_from_website
+from signalpost.extractors.website_enrichment import (
+    enrich_from_website,
+    enrich_from_website_with_status,
+)
 from signalpost.models import CompanyFact, CompanyProfile
 from signalpost.orgnr import sanitize_orgnr, validate_orgnr
 
@@ -121,18 +124,26 @@ async def build_profile(
             all_facts.extend(regnskap_facts)
 
         # 4. Optional website enrichment with strict anti-hallucination verification
+        source_statuses: dict[str, str] = {
+            "enhetsregisteret": "available",
+            "regnskapsregisteret": "available" if regnskap_data else "missing",
+        }
+
         if enable_website_enrichment:
             website_val = next((f.value for f in enhet_facts if f.field_name == "website"), None)
             legal_name_val = next((f.value for f in enhet_facts if f.field_name == "legal_name"), "")
 
             if website_val and isinstance(website_val, str):
-                enrichment_facts = await enrich_from_website(
+                enrichment_facts, web_status = await enrich_from_website_with_status(
                     website_url=website_val,
                     orgnr=cleaned_orgnr,
                     legal_name=legal_name_val,
                     client=brreg_client._client,
                 )
+                source_statuses["website"] = web_status
                 all_facts.extend(enrichment_facts)
+            else:
+                source_statuses["website"] = "missing"
 
         # 5. Deduplicate and assemble profile
         deduped_facts = deduplicate_facts(all_facts)
@@ -141,6 +152,7 @@ async def build_profile(
             orgnr=cleaned_orgnr,
             facts=deduped_facts,
             last_checked=fetch_time,
+            source_statuses=source_statuses,
         )
 
     finally:

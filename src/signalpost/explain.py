@@ -37,7 +37,7 @@ def generate_fact_note(fact: CompanyFact) -> str:
     unit = fact.unit or ""
 
     if field == "legal_name":
-        return f"Official registered legal name in Enhetsregisteret."
+        return "Official registered legal name in Enhetsregisteret."
 
     if field == "org_form_code":
         return f"Official Norwegian corporate structure code ({val})."
@@ -89,11 +89,10 @@ def generate_fact_note(fact: CompanyFact) -> str:
         return f"Official website registered with Brønnøysundregistrene: {val}."
 
     if field == "website_description":
-        return f"Verified secondary description extracted directly from company homepage."
+        return "Verified secondary description extracted directly from company homepage."
 
     if field == "vat_registered":
-        status_text = "Registered in the Norwegian VAT register (MVA-registeret)." if val else "Not registered in the VAT register."
-        return status_text
+        return "Registered in the Norwegian VAT register (MVA-registeret)." if val else "Not registered in the VAT register."
 
     if field == "status":
         return f"Official legal status: {str(val).upper()}."
@@ -168,7 +167,7 @@ def build_llm_prompt(profile: CompanyProfile) -> tuple[str, str]:
 def estimate_token_cost(
     prompt_tokens: int,
     completion_tokens: int,
-    model: str = "gemini-2.5-flash",
+    model: str = "google/gemini-2.5-flash",
 ) -> float:
     """Estimate USD cost based on token counts (e.g. standard Gemini/GPT-4o-mini pricing)."""
     # Standard pricing: ~$0.15 / 1M prompt tokens, ~$0.60 / 1M completion tokens
@@ -182,6 +181,7 @@ async def generate_company_summary(
     enable_llm: bool | None = None,
     api_key: str | None = None,
     model: str | None = None,
+    provider: str | None = None,
     client: httpx.AsyncClient | None = None,
 ) -> CompanySummaryResult:
     """Generate a summary for a company profile, with graceful fallback to deterministic templates.
@@ -191,6 +191,7 @@ async def generate_company_summary(
         enable_llm: Whether to attempt LLM summarization (defaults to settings.enable_llm_summary).
         api_key: LLM API key (if None, reads from env or settings).
         model: Model name to use.
+        provider: Provider name ('openrouter', 'gemini', 'openai').
         client: Optional httpx.AsyncClient for testing.
 
     Returns:
@@ -201,9 +202,22 @@ async def generate_company_summary(
         if enable_llm is not None
         else default_settings.enable_llm_summary
     )
-    llm_key = api_key or default_settings.llm_api_key or os.getenv("GEMINI_API_KEY") or os.getenv("OPENAI_API_KEY")
-    target_model = model or default_settings.llm_model
 
+    selected_provider = (
+        provider
+        or default_settings.llm_provider
+        or ("openrouter" if os.getenv("OPENROUTER_API_KEY") else "gemini")
+    ).lower()
+
+    # Resolution order for API keys (never hardcoded)
+    if selected_provider == "openrouter":
+        llm_key = api_key or os.getenv("OPENROUTER_API_KEY") or default_settings.openrouter_api_key or default_settings.llm_api_key
+    elif selected_provider == "gemini":
+        llm_key = api_key or os.getenv("GEMINI_API_KEY") or default_settings.llm_api_key
+    else:
+        llm_key = api_key or os.getenv("OPENAI_API_KEY") or default_settings.llm_api_key
+
+    target_model = model or default_settings.llm_model
     used_facts = [f.field_name for f in profile.facts]
 
     # Fallback to deterministic template if LLM is disabled or no key is provided
@@ -222,7 +236,7 @@ async def generate_company_summary(
 
     system_prompt, user_prompt = build_llm_prompt(profile)
 
-    # Attempt LLM call via provider (Gemini / OpenAI API compatible)
+    # Attempt LLM call via OpenRouter / Gemini / OpenAI
     try:
         should_close_client = False
         http_client = client
@@ -231,10 +245,46 @@ async def generate_company_summary(
             should_close_client = True
 
         try:
-            # Standard Gemini REST API or OpenAI-compatible endpoint
-            # We support both: if model starts with 'gemini', use Google Generative Language API
-            if "gemini" in target_model.lower():
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{target_model}:generateContent?key={llm_key}"
+            # 1. OpenRouter Provider
+            if selected_provider == "openrouter":
+                url = "https://openrouter.ai/api/v1/chat/completions"
+                headers = {
+                    "Authorization": f"Bearer {llm_key}",
+                    "HTTP-Referer": "https://github.com/Rewaskc02-lang/Signal_post",
+                    "X-Title": "Signalpost",
+                }
+                payload = {
+                    "model": target_model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "temperature": 0.2,
+                    "max_tokens": 250,
+                }
+                resp = await http_client.post(url, json=payload, headers=headers)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    candidate = data["choices"][0]["message"]["content"].strip()
+                    usage = data.get("usage", {})
+                    p_tokens = usage.get("prompt_tokens", len(user_prompt) // 4)
+                    c_tokens = usage.get("completion_tokens", len(candidate) // 4)
+                    cost = estimate_token_cost(p_tokens, c_tokens, target_model)
+                    return CompanySummaryResult(
+                        orgnr=profile.orgnr,
+                        summary_text=candidate,
+                        source_facts_used=used_facts,
+                        prompt_tokens=p_tokens,
+                        completion_tokens=c_tokens,
+                        total_tokens=p_tokens + c_tokens,
+                        estimated_cost_usd=cost,
+                        is_llm_generated=True,
+                    )
+
+            # 2. Google Generative Language API (Gemini direct)
+            elif selected_provider == "gemini":
+                clean_gemini_model = target_model.replace("google/", "").replace("models/", "")
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_gemini_model}:generateContent?key={llm_key}"
                 payload = {
                     "contents": [
                         {"role": "user", "parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}
@@ -248,7 +298,7 @@ async def generate_company_summary(
                     usage = data.get("usageMetadata", {})
                     p_tokens = usage.get("promptTokenCount", len(user_prompt) // 4)
                     c_tokens = usage.get("candidatesTokenCount", len(candidate) // 4)
-                    cost = estimate_token_cost(p_tokens, c_tokens, target_model)
+                    cost = estimate_token_cost(p_tokens, c_tokens, clean_gemini_model)
                     return CompanySummaryResult(
                         orgnr=profile.orgnr,
                         summary_text=candidate,
@@ -259,8 +309,9 @@ async def generate_company_summary(
                         estimated_cost_usd=cost,
                         is_llm_generated=True,
                     )
-            else:
-                # OpenAI-compatible API
+
+            # 3. OpenAI Direct API
+            elif selected_provider == "openai":
                 url = "https://api.openai.com/v1/chat/completions"
                 headers = {"Authorization": f"Bearer {llm_key}"}
                 payload = {

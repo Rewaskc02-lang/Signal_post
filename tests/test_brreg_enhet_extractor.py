@@ -105,6 +105,28 @@ def test_extract_enhet_facts_sparse() -> None:
     assert "employee_count" not in facts_by_field
 
 
+def test_extract_enhet_facts_parent_relationship_and_content_hash() -> None:
+    raw_data = {
+        "organisasjonsnummer": "999888777",
+        "navn": "EQUINOR ENERGY AS",
+        "overordnetEnhet": "923609016",
+        "registrertIMvaregisteret": True,
+    }
+
+    facts = extract_enhet_facts(raw_data, endpoint_url=ENDPOINT)
+    facts_by_field = {f.field_name: f for f in facts}
+
+    assert "parent_orgnr" in facts_by_field
+    assert facts_by_field["parent_orgnr"].value == "923609016"
+    assert facts_by_field["parent_orgnr"].source_name == "Brønnøysundregistrene – Enhetsregisteret"
+
+    # Verify content hash and extraction method are present on all facts
+    for f in facts:
+        assert f.content_hash is not None
+        assert len(f.content_hash) == 64  # SHA-256 hex length
+        assert f.extraction_method == "official_api"
+
+
 def test_determine_status() -> None:
     assert determine_status({"slettedato": "2023-01-01"}) == "deleted"
     assert determine_status({"konkurs": True}) == "bankrupt"

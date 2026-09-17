@@ -108,3 +108,31 @@ def test_company_profile_creation_and_facts() -> None:
     dumped = profile.model_dump(mode="json")
     assert dumped["orgnr"] == "923609016"
     assert len(dumped["facts"]) == 2
+
+
+def test_company_fact_with_content_hash_and_extraction_method() -> None:
+    fact = CompanyFact(
+        field_name="legal_name",
+        value="EQUINOR ASA",
+        source_name="Brønnøysundregistrene – Enhetsregisteret",
+        source_url="https://data.brreg.no/enhetsregisteret/api/enheter/923609016",
+        content_hash="e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        extraction_method="official_api",
+    )
+    assert fact.content_hash == "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    assert fact.extraction_method == "official_api"
+
+
+def test_company_profile_explicit_source_statuses() -> None:
+    profile = CompanyProfile(
+        orgnr="923609016",
+        facts=[],
+        source_statuses={
+            "enhetsregisteret": "available",
+            "regnskapsregisteret": "missing",
+            "website": "blocked",
+        },
+    )
+    assert profile.source_statuses["enhetsregisteret"] == "available"
+    assert profile.source_statuses["regnskapsregisteret"] == "missing"
+    assert profile.source_statuses["website"] == "blocked"

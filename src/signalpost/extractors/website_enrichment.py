@@ -1,5 +1,4 @@
-"""Secondary source enrichment from company websites with strict identity verification."""
-
+import hashlib
 from datetime import date, datetime, timezone
 import re
 import time
@@ -100,33 +99,24 @@ async def is_url_allowed_by_robots(base_origin: str, target_url: str, user_agent
         return True
 
 
-async def enrich_from_website(
+async def enrich_from_website_with_status(
     website_url: str,
     orgnr: str,
     legal_name: str,
     client: httpx.AsyncClient | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
-) -> list[CompanyFact]:
+) -> tuple[list[CompanyFact], str]:
     """Fetch company website, verify identity proof, and extract secondary facts.
 
-    Anti-Hallucination & Provenance Rules:
-    - If neither org number nor exact legal name is found on the fetched pages,
-      returns 0 facts and logs a structured 'match_unverified' event.
-    - All extracted secondary facts carry confidence='unverified_secondary'.
-    - Exact source URL of the verifying page is attached.
-
-    Args:
-        website_url: Homepage URL.
-        orgnr: 9-digit organisation number.
-        legal_name: Official legal name from Enhetsregisteret.
-        client: Optional httpx.AsyncClient.
-        user_agent: Custom User-Agent header string.
-
     Returns:
-        List of CompanyFact instances (empty if unverified or unreachable).
+        Tuple of (facts_list, explicit_state) where explicit_state is one of:
+        - "available": verified and secondary facts extracted
+        - "missing": empty URL or unreachable pages
+        - "blocked": prohibited by robots.txt / 403
+        - "ambiguous": pages reached but identity proof (orgnr/legal name) could not be resolved
     """
     if not website_url or not orgnr:
-        return []
+        return [], "missing"
 
     normalized_base = normalize_url(website_url)
     parsed = urllib.parse.urlparse(normalized_base)
@@ -145,6 +135,7 @@ async def enrich_from_website(
 
     start_time = time.perf_counter()
     verified_url: str | None = None
+    verified_html: str | None = None
     extracted_description: str | None = None
     fetch_time = datetime.now(timezone.utc)
 
@@ -161,7 +152,7 @@ async def enrich_from_website(
                 attempt=1,
                 error="robots_disallowed",
             )
-            return []
+            return [], "blocked"
 
         # Iterate candidate pages to find verification
         for subpath in CANDIDATE_SUBPATHS:
@@ -172,6 +163,7 @@ async def enrich_from_website(
                     html_content = resp.text
                     if is_identity_verified_on_page(html_content, orgnr, legal_name):
                         verified_url = str(resp.url)
+                        verified_html = html_content
                         extracted_description = extract_meta_description(html_content)
                         break
             except Exception:
@@ -180,7 +172,7 @@ async def enrich_from_website(
         latency_ms = (time.perf_counter() - start_time) * 1000.0
 
         if not verified_url:
-            # Identity proof missing -> fail safe, return zero facts
+            # Identity proof missing -> fail safe, return zero facts with ambiguous state
             log_request_event(
                 orgnr=orgnr,
                 endpoint="website_enrichment",
@@ -190,7 +182,7 @@ async def enrich_from_website(
                 attempt=1,
                 error="match_unverified",
             )
-            return []
+            return [], "ambiguous"
 
         # Verified! Log successful verification
         log_request_event(
@@ -204,7 +196,8 @@ async def enrich_from_website(
         )
 
         facts: list[CompanyFact] = []
-        if extracted_description:
+        if extracted_description and verified_html:
+            content_hash = hashlib.sha256(verified_html.encode("utf-8")).hexdigest()
             facts.append(
                 CompanyFact(
                     field_name="website_description",
@@ -214,11 +207,31 @@ async def enrich_from_website(
                     as_of=date.today(),
                     retrieved_at=fetch_time,
                     confidence="unverified_secondary",
+                    content_hash=content_hash,
+                    extraction_method="html_meta",
                 )
             )
 
-        return facts
+        return facts, "available"
 
     finally:
         if should_close_client and not http_client.is_closed:
             await http_client.aclose()
+
+
+async def enrich_from_website(
+    website_url: str,
+    orgnr: str,
+    legal_name: str,
+    client: httpx.AsyncClient | None = None,
+    user_agent: str = DEFAULT_USER_AGENT,
+) -> list[CompanyFact]:
+    """Fetch company website, verify identity proof, and extract secondary facts."""
+    facts, _ = await enrich_from_website_with_status(
+        website_url=website_url,
+        orgnr=orgnr,
+        legal_name=legal_name,
+        client=client,
+        user_agent=user_agent,
+    )
+    return facts

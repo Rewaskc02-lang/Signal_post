@@ -26,6 +26,8 @@ class FactHistoryEntry(BaseModel):
     confidence: str
     status: str  # "new", "changed", "confirmed"
     old_value_json: str | None = None
+    content_hash: str | None = None
+    extraction_method: str | None = None
     recorded_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
@@ -70,6 +72,8 @@ class Storage:
                     confidence TEXT NOT NULL,
                     status TEXT NOT NULL,
                     old_value_json TEXT,
+                    content_hash TEXT,
+                    extraction_method TEXT,
                     recorded_at TEXT NOT NULL
                 );
 
@@ -80,6 +84,14 @@ class Storage:
                 ON fact_history(orgnr, recorded_at);
                 """
             )
+
+            # Check and migrate columns if upgrading from earlier version
+            cursor = conn.execute("PRAGMA table_info(fact_history)")
+            columns = {row["name"] for row in cursor.fetchall()}
+            if "content_hash" not in columns:
+                conn.execute("ALTER TABLE fact_history ADD COLUMN content_hash TEXT")
+            if "extraction_method" not in columns:
+                conn.execute("ALTER TABLE fact_history ADD COLUMN extraction_method TEXT")
 
     def get_profile(self, orgnr: str) -> CompanyProfile | None:
         """Retrieve the latest stored CompanyProfile for an organisation."""
@@ -149,6 +161,8 @@ class Storage:
                 e.confidence,
                 e.status,
                 e.old_value_json,
+                e.content_hash,
+                e.extraction_method,
                 e.recorded_at.isoformat(),
             )
             for e in entries
@@ -158,9 +172,11 @@ class Storage:
             conn.executemany(
                 """
                 INSERT INTO fact_history (
-                    orgnr, field_name, as_of, value_json, unit, source_name, source_url,
-                    confidence, status, old_value_json, recorded_at
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    orgnr, field_name, as_of, value_json, unit,
+                    source_name, source_url, confidence, status,
+                    old_value_json, content_hash, extraction_method, recorded_at
+                )
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 params,
             )
@@ -171,7 +187,8 @@ class Storage:
         cursor = conn.execute(
             """
             SELECT id, orgnr, field_name, as_of, value_json, unit, source_name,
-                   source_url, confidence, status, old_value_json, recorded_at
+                   source_url, confidence, status, old_value_json, content_hash,
+                   extraction_method, recorded_at
             FROM fact_history
             WHERE orgnr = ?
             ORDER BY id DESC
@@ -194,6 +211,8 @@ class Storage:
                     confidence=r["confidence"],
                     status=r["status"],
                     old_value_json=r["old_value_json"],
+                    content_hash=r["content_hash"],
+                    extraction_method=r["extraction_method"],
                     recorded_at=datetime.fromisoformat(r["recorded_at"]),
                 )
             )

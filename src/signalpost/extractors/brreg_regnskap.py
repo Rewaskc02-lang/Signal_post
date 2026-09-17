@@ -1,5 +1,5 @@
-"""Extractor for annual financial accounts from Brønnøysundregistrene (Regnskapsregisteret)."""
-
+import hashlib
+import json
 from datetime import date, datetime, timezone
 from typing import Any
 
@@ -22,6 +22,7 @@ def extract_regnskap_facts(
     filings: list[dict[str, Any]],
     endpoint_url: str,
     retrieved_at: datetime | None = None,
+    content_hash: str | None = None,
 ) -> list[CompanyFact]:
     """Extract official financial CompanyFact objects from Regnskapsregisteret filings.
 
@@ -30,11 +31,13 @@ def extract_regnskap_facts(
     - as_of is set to the exact fiscal year end date (tilDato), NEVER retrieval date.
     - If a field is omitted in a filing, it is skipped without fabricating zeros or nulls.
     - Exact numeric values and currency units reported by Brreg are preserved verbatim.
+    - Content hash (SHA-256) and extraction_method are captured per fact.
 
     Args:
         filings: List of yearly filing dicts returned by Brreg.
         endpoint_url: The exact API URL that was queried.
         retrieved_at: Timestamp when data was retrieved (defaults to UTC now).
+        content_hash: Optional precomputed SHA-256 hash of the response content.
 
     Returns:
         List of CompanyFact instances with full provenance and confidence='official'.
@@ -56,6 +59,13 @@ def extract_regnskap_facts(
             continue
 
         currency = filing.get("valuta", "NOK")
+
+        # Compute SHA-256 hash of the filing payload if not precomputed
+        if content_hash:
+            filing_hash = content_hash
+        else:
+            filing_bytes = json.dumps(filing, sort_keys=True, default=str).encode("utf-8")
+            filing_hash = hashlib.sha256(filing_bytes).hexdigest()
 
         # Helpers for safe nested retrieval
         resultat = filing.get("resultatregnskapResultat", {})
@@ -90,6 +100,8 @@ def extract_regnskap_facts(
                         as_of=as_of_date,
                         retrieved_at=fetch_time,
                         confidence="official",
+                        content_hash=filing_hash,
+                        extraction_method="official_api",
                     )
                 )
 

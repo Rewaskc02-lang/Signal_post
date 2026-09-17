@@ -111,7 +111,58 @@ def test_generate_deterministic_summary() -> None:
 
 
 @pytest.mark.asyncio
-async def test_generate_company_summary_mocked_llm() -> None:
+async def test_generate_company_summary_mocked_openrouter() -> None:
+    profile = CompanyProfile(
+        orgnr="923609016",
+        facts=[
+            CompanyFact(
+                field_name="legal_name",
+                value="EQUINOR ASA",
+                source_name="Enhet",
+                source_url="https://brreg.no",
+                confidence="official",
+            ),
+        ],
+    )
+
+    mock_response = {
+        "choices": [
+            {
+                "message": {
+                    "content": "Equinor ASA is an energy company officially registered in Enhetsregisteret."
+                }
+            }
+        ],
+        "usage": {
+            "prompt_tokens": 100,
+            "completion_tokens": 20,
+        },
+    }
+
+    mock_url = "https://openrouter.ai/api/v1/chat/completions"
+    with respx.mock() as respx_mock:
+        respx_mock.post(mock_url).respond(
+            status_code=200,
+            json=mock_response,
+        )
+
+        result = await generate_company_summary(
+            profile=profile,
+            enable_llm=True,
+            api_key="sk-or-test-key",
+            provider="openrouter",
+            model="google/gemini-2.5-flash",
+        )
+
+    assert result.is_llm_generated is True
+    assert "Equinor ASA" in result.summary_text
+    assert result.prompt_tokens == 100
+    assert result.completion_tokens == 20
+    assert result.estimated_cost_usd > 0.0
+
+
+@pytest.mark.asyncio
+async def test_generate_company_summary_mocked_gemini() -> None:
     profile = CompanyProfile(
         orgnr="923609016",
         facts=[
@@ -143,7 +194,7 @@ async def test_generate_company_summary_mocked_llm() -> None:
         },
     }
 
-    mock_api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=test-key"
+    mock_api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=test-gemini-key"
     with respx.mock() as respx_mock:
         respx_mock.post(mock_api_url).respond(
             status_code=200,
@@ -153,7 +204,8 @@ async def test_generate_company_summary_mocked_llm() -> None:
         result = await generate_company_summary(
             profile=profile,
             enable_llm=True,
-            api_key="test-key",
+            api_key="test-gemini-key",
+            provider="gemini",
             model="gemini-2.5-flash",
         )
 
@@ -179,7 +231,7 @@ async def test_generate_company_summary_fallback_on_failure() -> None:
         ],
     )
 
-    mock_api_url = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=test-key"
+    mock_api_url = "https://openrouter.ai/api/v1/chat/completions"
     with respx.mock() as respx_mock:
         # LLM returns 500
         respx_mock.post(mock_api_url).respond(status_code=500, text="Internal Server Error")
@@ -188,8 +240,9 @@ async def test_generate_company_summary_fallback_on_failure() -> None:
         result = await generate_company_summary(
             profile=profile,
             enable_llm=True,
-            api_key="test-key",
-            model="gemini-2.5-flash",
+            api_key="sk-or-test",
+            provider="openrouter",
+            model="google/gemini-2.5-flash",
         )
 
     assert result.is_llm_generated is False

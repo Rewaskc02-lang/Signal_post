@@ -47,8 +47,16 @@ class CompanyFact(BaseModel):
         description="Numeric confidence score or alias for backwards compatibility.",
     )
 
+    content_hash: str | None = Field(
+        default=None,
+        description="SHA-256 hash of the retrieved source content payload at fetch time.",
+    )
+    extraction_method: str | None = Field(
+        default=None,
+        description="Method used to extract this fact (e.g. 'official_api', 'json_path', 'html_meta').",
+    )
+
     @model_validator(mode="before")
-    @classmethod
     def validate_confidence_fields(cls, values: Any) -> Any:
         if isinstance(values, dict):
             # If confidence_level is provided as float, validate range 0.0 <= val <= 1.0
@@ -83,4 +91,12 @@ class CompanyProfile(BaseModel):
     last_changed: datetime | None = Field(
         default=None,
         description="Timestamp of the latest change or registration update from source.",
+    )
+    source_statuses: dict[str, str] = Field(
+        default_factory=dict,
+        description="Explicit source availability states ('available', 'missing', 'blocked', 'ambiguous').",
+    )
+    executive_summary: str | None = Field(
+        default=None,
+        description="Natural language summary or notes describing the entity.",
     )
