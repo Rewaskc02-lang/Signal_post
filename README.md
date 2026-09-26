@@ -10,6 +10,7 @@ Signalpost is an asynchronous Python agent designed to retrieve, validate, recon
 ```bash
 python run.py --input orgnumbers.txt --output profiles/ --max-requests 2000 --max-seconds 2400
 ```
+*Emits one standard JSON terminal envelope per input organisation to `stdout` and saves `envelopes.jsonl` to the output path.*
 
 ### Single Lookup Mode (Instant Ad-Hoc Grading)
 ```bash

@@ -1,5 +1,7 @@
 """Unified command-line interface and execution orchestrator for Signalpost."""
 
+from __future__ import annotations
+
 import argparse
 import asyncio
 from datetime import datetime, timezone
@@ -12,9 +14,16 @@ from typing import Any
 import httpx
 from pydantic import BaseModel, ConfigDict, Field
 
-from signalpost.brreg_client import BrregClient, InvalidOrgnrError, NotFoundError, BrregError
+from signalpost.brreg_client import (
+    BrregClient,
+    InvalidOrgnrError,
+    NotFoundError,
+    BrregError,
+    set_log_stream,
+)
 from signalpost.config import Settings, settings as default_settings
 from signalpost.differ import ProfileUpdateSummary, diff_and_update_profile
+from signalpost.envelope import build_terminal_envelope
 from signalpost.explain import generate_company_summary, generate_fact_note
 from signalpost.matcher import build_profile
 from signalpost.models import CompanyProfile
@@ -93,6 +102,7 @@ class RunReport(BaseModel):
     total_requested: int
     completed: int
     failed: int
+    emitted_envelopes: int = 0
     outbound_requests_used: int
     max_requests_cap: int
     elapsed_seconds: float
@@ -104,8 +114,36 @@ class RunReport(BaseModel):
     halt_reason: str | None = None
 
 
+def read_organisation_inputs(path: str | Path) -> list[str]:
+    """Read organisation numbers from .txt, .json, or .jsonl files."""
+    source = Path(path)
+    if not source.exists():
+        raise FileNotFoundError(f"Input file '{path}' not found.")
+    text = source.read_text(encoding="utf-8")
+    values: list[Any]
+    if source.suffix == ".json":
+        body = json.loads(text)
+        values = body if isinstance(body, list) else body.get("organisation_numbers", [])
+    elif source.suffix == ".jsonl":
+        values = [json.loads(line) for line in text.splitlines() if line.strip()]
+    else:
+        values = [line.strip() for line in text.splitlines() if line.strip() and not line.strip().startswith("#")]
+
+    orgnrs = []
+    for value in values:
+        if isinstance(value, dict):
+            org = value.get("organisation_number") or value.get("orgnr") or ""
+        else:
+            org = str(value)
+        org_str = str(org).strip()
+        if org_str:
+            orgnrs.append(org_str)
+    return orgnrs
+
+
 async def process_single_orgnr(
     orgnr: str,
+    run_id: str,
     output_dir: Path | None,
     storage: Storage,
     budget: BudgetTracker,
@@ -115,23 +153,66 @@ async def process_single_orgnr(
     enable_summary: bool = True,
     enable_llm: bool = False,
     quiet: bool = False,
-) -> tuple[CompanyProfile | None, ProfileUpdateSummary | None]:
-    """Process a single organisation through validation, fetch, diffing, and file output."""
-    if budget.is_exhausted():
-        return None, None
-
+) -> tuple[CompanyProfile | None, ProfileUpdateSummary | None, dict[str, Any]]:
+    """Process a single organisation through validation, fetch, diffing, and envelope emission."""
+    start_dt = datetime.now(timezone.utc)
+    t0 = time.time()
     cleaned_orgnr = sanitize_orgnr(orgnr)
 
-    # 1. Validation check
+    # 1. Budget pre-check
+    if budget.is_exhausted():
+        end_dt = datetime.now(timezone.utc)
+        envelope = build_terminal_envelope(
+            orgnr=cleaned_orgnr or orgnr,
+            run_id=run_id,
+            started_at=start_dt,
+            completed_at=end_dt,
+            request_count=0,
+            runtime_ms=(time.time() - t0) * 1000,
+            error=budget.halt_reason or "Budget exhausted",
+            terminal_state="budget_exhausted",
+        )
+        sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
+        return None, None, envelope
+
+    # 2. Validation check
     if not validate_orgnr(cleaned_orgnr):
         if not quiet:
-            sys.stderr.write(f"❌ Invalid orgnr format: {orgnr}\n")
+            sys.stderr.write(f"❌ Invalid orgnr format/checksum: {orgnr}\n")
         await budget.record_profile_failure()
-        return None, None
+        end_dt = datetime.now(timezone.utc)
+        envelope = build_terminal_envelope(
+            orgnr=cleaned_orgnr or orgnr,
+            run_id=run_id,
+            started_at=start_dt,
+            completed_at=end_dt,
+            request_count=0,
+            runtime_ms=(time.time() - t0) * 1000,
+            error="Invalid Norwegian organisation number format or checksum",
+            terminal_state="submission_error",
+        )
+        sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+        sys.stdout.flush()
+        return None, None, envelope
 
+    reqs_before = budget.request_count
     async with semaphore:
         if budget.is_exhausted():
-            return None, None
+            end_dt = datetime.now(timezone.utc)
+            envelope = build_terminal_envelope(
+                orgnr=cleaned_orgnr,
+                run_id=run_id,
+                started_at=start_dt,
+                completed_at=end_dt,
+                request_count=0,
+                runtime_ms=(time.time() - t0) * 1000,
+                error=budget.halt_reason or "Budget exhausted",
+                terminal_state="budget_exhausted",
+            )
+            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
+            return None, None, envelope
 
         try:
             prev_profile = storage.get_profile(cleaned_orgnr)
@@ -160,40 +241,104 @@ async def process_single_orgnr(
                 tokens_out = summary_res.completion_tokens
                 cost = summary_res.estimated_cost_usd
 
-            # Save individual JSON profile to output directory if specified
-            if output_dir is not None:
+            # Save individual JSON profile to output directory if specified as a directory
+            if output_dir is not None and not str(output_dir).endswith(".jsonl"):
                 output_dir.mkdir(parents=True, exist_ok=True)
                 profile_path = output_dir / f"{cleaned_orgnr}.json"
                 profile_dict = updated_profile.model_dump(mode="json")
-                if enable_summary and 'summary_res' in locals():
+                if enable_summary and "summary_res" in locals():
                     profile_dict["executive_summary"] = summary_res.summary_text
                 with open(profile_path, "w", encoding="utf-8") as f:
                     json.dump(profile_dict, f, indent=2, ensure_ascii=False)
 
+            reqs_used = budget.request_count - reqs_before
             await budget.record_profile_success(tokens_in, tokens_out, cost)
+
+            end_dt = datetime.now(timezone.utc)
+            envelope = build_terminal_envelope(
+                orgnr=cleaned_orgnr,
+                run_id=run_id,
+                started_at=start_dt,
+                completed_at=end_dt,
+                profile=updated_profile,
+                diff_summary=diff_summary,
+                request_count=reqs_used,
+                runtime_ms=(time.time() - t0) * 1000,
+                cost_usd=cost,
+                terminal_state="complete",
+            )
+            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
+
             if not quiet:
                 status_str = f"new={diff_summary.new_count}, changed={diff_summary.changed_count}, confirmed={diff_summary.confirmed_count}"
-                print(f"✓ [{cleaned_orgnr}] Complete ({len(updated_profile.facts)} facts, {status_str})")
+                sys.stderr.write(f"✓ [{cleaned_orgnr}] Complete ({len(updated_profile.facts)} facts, {status_str})\n")
 
-            return updated_profile, diff_summary
+            return updated_profile, diff_summary, envelope
 
         except BudgetExhaustedError:
-            return None, None
+            reqs_used = budget.request_count - reqs_before
+            end_dt = datetime.now(timezone.utc)
+            envelope = build_terminal_envelope(
+                orgnr=cleaned_orgnr,
+                run_id=run_id,
+                started_at=start_dt,
+                completed_at=end_dt,
+                request_count=reqs_used,
+                runtime_ms=(time.time() - t0) * 1000,
+                error=budget.halt_reason or "Budget exhausted",
+                terminal_state="budget_exhausted",
+            )
+            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
+            return None, None, envelope
+
         except NotFoundError:
+            reqs_used = budget.request_count - reqs_before
             if not quiet:
-                print(f"⚠️ [{cleaned_orgnr}] Not found in Enhetsregisteret (404)")
+                sys.stderr.write(f"⚠️ [{cleaned_orgnr}] Not found in Enhetsregisteret (404)\n")
             await budget.record_profile_failure()
-            return None, None
+            end_dt = datetime.now(timezone.utc)
+            envelope = build_terminal_envelope(
+                orgnr=cleaned_orgnr,
+                run_id=run_id,
+                started_at=start_dt,
+                completed_at=end_dt,
+                request_count=reqs_used,
+                runtime_ms=(time.time() - t0) * 1000,
+                error="Organisasjonsnummer not found in Enhetsregisteret (404)",
+                terminal_state="not_found",
+            )
+            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
+            return None, None, envelope
+
         except Exception as exc:
+            reqs_used = budget.request_count - reqs_before
             if not quiet:
-                print(f"❌ [{cleaned_orgnr}] Error: {exc}")
+                sys.stderr.write(f"❌ [{cleaned_orgnr}] Error: {exc}\n")
             await budget.record_profile_failure()
-            return None, None
+            end_dt = datetime.now(timezone.utc)
+            envelope = build_terminal_envelope(
+                orgnr=cleaned_orgnr,
+                run_id=run_id,
+                started_at=start_dt,
+                completed_at=end_dt,
+                request_count=reqs_used,
+                runtime_ms=(time.time() - t0) * 1000,
+                error=str(exc),
+                terminal_state="source_error",
+            )
+            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
+            return None, None, envelope
 
 
 async def run_pipeline(
     orgnrs: list[str],
     output_dir: Path | None = None,
+    envelopes_output: Path | None = None,
+    run_id: str | None = None,
     max_requests: int = 2000,
     max_seconds: float = 2400.0,
     concurrency: int = 15,
@@ -204,6 +349,7 @@ async def run_pipeline(
     quiet: bool = False,
 ) -> RunReport:
     """Run the Signalpost ingestion pipeline across a list of organisation numbers."""
+    run_id = run_id or f"run-{datetime.now(timezone.utc).strftime('%Y%m%d%H%M%S')}"
     budget = BudgetTracker(max_requests=max_requests, max_seconds=max_seconds)
     storage = Storage(db_path=db_path)
     semaphore = asyncio.Semaphore(concurrency)
@@ -222,18 +368,21 @@ async def run_pipeline(
     brreg_client = BrregClient(client=custom_client)
 
     if not quiet:
-        print(f"\n{'='*80}")
-        print(f"SIGNALPOST INGESTION RUN")
-        print(f"  • Organisations:  {len(orgnrs)}")
-        print(f"  • Output Directory: {output_dir or '(none)'}")
-        print(f"  • Hard Limits:    max_requests={max_requests}, max_seconds={max_seconds:.0f}s")
-        print(f"  • Options:        enrichment={enable_enrichment}, summary={enable_summary}, llm={enable_llm}")
-        print(f"{'='*80}\n")
+        sys.stderr.write(f"\n{'='*80}\n")
+        sys.stderr.write("SIGNALPOST INGESTION RUN\n")
+        sys.stderr.write(f"  • Run ID:           {run_id}\n")
+        sys.stderr.write(f"  • Organisations:    {len(orgnrs)}\n")
+        sys.stderr.write(f"  • Output Path:      {output_dir or '(stdout)'}\n")
+        sys.stderr.write(f"  • Hard Limits:      max_requests={max_requests}, max_seconds={max_seconds:.0f}s\n")
+        sys.stderr.write(f"  • Options:          enrichment={enable_enrichment}, summary={enable_summary}, llm={enable_llm}\n")
+        sys.stderr.write(f"{'='*80}\n\n")
 
+    set_log_stream(sys.stderr)
     try:
         tasks = [
             process_single_orgnr(
                 orgnr=orgnr,
+                run_id=run_id,
                 output_dir=output_dir,
                 storage=storage,
                 budget=budget,
@@ -246,11 +395,36 @@ async def run_pipeline(
             )
             for orgnr in orgnrs
         ]
-        await asyncio.gather(*tasks, return_exceptions=True)
+        results = await asyncio.gather(*tasks, return_exceptions=True)
 
     finally:
+        set_log_stream(None)
         await brreg_client.close()
         storage.close()
+
+    # Collect envelopes in original input order
+    envelopes = []
+    for res in results:
+        if isinstance(res, tuple) and len(res) == 3 and res[2] is not None:
+            envelopes.append(res[2])
+
+    # Write envelopes to file targets
+    target_files: list[Path] = []
+    if output_dir is not None:
+        out_str = str(output_dir)
+        if out_str.endswith(".jsonl"):
+            target_files.append(output_dir)
+        else:
+            output_dir.mkdir(parents=True, exist_ok=True)
+            target_files.append(output_dir / "envelopes.jsonl")
+    if envelopes_output is not None:
+        target_files.append(envelopes_output)
+
+    for target_path in target_files:
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        with open(target_path, "w", encoding="utf-8") as f:
+            for env in envelopes:
+                f.write(json.dumps(env, ensure_ascii=False) + "\n")
 
     elapsed = budget.elapsed_seconds
     comp = budget.completed_count
@@ -258,7 +432,6 @@ async def run_pipeline(
     reqs = budget.request_count
     cost = budget.total_cost_usd
 
-    # Calculate projected 100-company cost
     cost_per_company = (cost / comp) if comp > 0 else 0.0
     projected_100_cost = cost_per_company * 100.0
 
@@ -267,6 +440,7 @@ async def run_pipeline(
         total_requested=len(orgnrs),
         completed=comp,
         failed=fail,
+        emitted_envelopes=len(envelopes),
         outbound_requests_used=reqs,
         max_requests_cap=max_requests,
         elapsed_seconds=round(elapsed, 2),
@@ -279,18 +453,19 @@ async def run_pipeline(
     )
 
     if not quiet:
-        print(f"\n{'='*80}")
-        print(f"RUN SUMMARY REPORT")
-        print(f"{'='*80}")
-        print(f"  • Completed Profiles:    {comp} / {len(orgnrs)}")
-        print(f"  • Failed / Invalid:      {fail}")
-        print(f"  • Outbound Requests:     {reqs} / {max_requests} limit")
-        print(f"  • Wall-Clock Time:       {elapsed:.2f}s / {max_seconds:.0f}s cap")
-        print(f"  • Estimated Run Cost:    ${cost:.6f} USD")
-        print(f"  • Projected 100-Co Cost: ${projected_100_cost:.6f} USD")
+        sys.stderr.write(f"\n{'='*80}\n")
+        sys.stderr.write("RUN SUMMARY REPORT\n")
+        sys.stderr.write(f"{'='*80}\n")
+        sys.stderr.write(f"  • Completed Profiles:    {comp} / {len(orgnrs)}\n")
+        sys.stderr.write(f"  • Emitted Envelopes:     {len(envelopes)} / {len(orgnrs)}\n")
+        sys.stderr.write(f"  • Failed / Invalid:      {fail}\n")
+        sys.stderr.write(f"  • Outbound Requests:     {reqs} / {max_requests} limit\n")
+        sys.stderr.write(f"  • Wall-Clock Time:       {elapsed:.2f}s / {max_seconds:.0f}s cap\n")
+        sys.stderr.write(f"  • Estimated Run Cost:    ${cost:.6f} USD\n")
+        sys.stderr.write(f"  • Projected 100-Co Cost: ${projected_100_cost:.6f} USD\n")
         if budget.halt_reason:
-            print(f"  ⚠️ Circuit Breaker Halt: {budget.halt_reason}")
-        print(f"{'='*80}\n")
+            sys.stderr.write(f"  ⚠️ Circuit Breaker Halt: {budget.halt_reason}\n")
+        sys.stderr.write(f"{'='*80}\n\n")
 
     return report
 
@@ -305,8 +480,10 @@ def build_arg_parser() -> argparse.ArgumentParser:
     group.add_argument(
         "--input",
         "-i",
+        "--organisations",
         type=str,
-        help="Path to a text file containing organisation numbers (one per line).",
+        dest="input",
+        help="Path to a text/JSON/JSONL file containing organisation numbers.",
     )
     group.add_argument(
         "--orgnr",
@@ -320,7 +497,19 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "-out",
         type=str,
         default="profiles",
-        help="Directory to write structured JSON company profiles (default: 'profiles').",
+        help="Output JSONL file or directory to write company profiles & envelopes (default: 'profiles').",
+    )
+    parser.add_argument(
+        "--envelopes-output",
+        type=str,
+        default=None,
+        help="Explicit file path to write terminal envelopes JSONL.",
+    )
+    parser.add_argument(
+        "--run-id",
+        type=str,
+        default=None,
+        help="Evaluation run identifier (default: auto-generated timestamp).",
     )
     parser.add_argument(
         "--max-requests",
@@ -370,7 +559,7 @@ def build_arg_parser() -> argparse.ArgumentParser:
         "--quiet",
         "-q",
         action="store_true",
-        help="Suppress progress outputs.",
+        help="Suppress progress outputs on stderr.",
     )
 
     return parser
@@ -385,22 +574,24 @@ async def async_main() -> int:
     if args.orgnr:
         orgnrs = [args.orgnr]
     elif args.input:
-        input_path = Path(args.input)
-        if not input_path.exists():
-            sys.stderr.write(f"Error: Input file '{args.input}' not found.\n")
+        try:
+            orgnrs = read_organisation_inputs(args.input)
+        except Exception as exc:
+            sys.stderr.write(f"Error reading input: {exc}\n")
             return 1
-        with open(input_path, "r", encoding="utf-8") as f:
-            orgnrs = [line.strip() for line in f if line.strip() and not line.startswith("#")]
 
     if not orgnrs:
         sys.stderr.write("Error: No organisation numbers provided.\n")
         return 1
 
     output_dir = Path(args.output) if args.output else None
+    envelopes_out = Path(args.envelopes_output) if args.envelopes_output else None
 
     report = await run_pipeline(
         orgnrs=orgnrs,
         output_dir=output_dir,
+        envelopes_output=envelopes_out,
+        run_id=args.run_id,
         max_requests=args.max_requests,
         max_seconds=args.max_seconds,
         concurrency=args.concurrency,
@@ -417,7 +608,7 @@ async def async_main() -> int:
         with open(report_path, "w", encoding="utf-8") as f:
             f.write(report.model_dump_json(indent=2))
 
-    return 0 if report.completed > 0 else 1
+    return 0 if report.emitted_envelopes > 0 else 1
 
 
 def main() -> None:

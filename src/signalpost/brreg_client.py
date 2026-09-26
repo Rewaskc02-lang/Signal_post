@@ -38,6 +38,15 @@ class BrregServerError(BrregError):
     """Raised when Brreg returns a 5xx server error after exhausting retries."""
 
 
+_log_stream: Any = None
+
+
+def set_log_stream(stream: Any) -> None:
+    """Set the stream for structured JSON-lines output (e.g. sys.stderr in CLI mode)."""
+    global _log_stream
+    _log_stream = stream
+
+
 def log_request_event(
     orgnr: str,
     endpoint: str,
@@ -47,7 +56,7 @@ def log_request_event(
     attempt: int,
     error: str | None = None,
 ) -> None:
-    """Log structured JSON-lines output to stdout for budget tracking and observability."""
+    """Log structured JSON-lines output for budget tracking and observability."""
     event = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "orgnr": orgnr,
@@ -58,8 +67,9 @@ def log_request_event(
         "attempt": attempt,
         "error": error,
     }
-    sys.stdout.write(json.dumps(event) + "\n")
-    sys.stdout.flush()
+    stream = _log_stream if _log_stream is not None else sys.stdout
+    stream.write(json.dumps(event) + "\n")
+    stream.flush()
 
 
 class BrregClient:

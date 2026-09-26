@@ -13,11 +13,29 @@
 ```bash
 python run.py --input orgnumbers.txt --output profiles/ --max-requests 2000 --max-seconds 2400
 ```
+*Note: Accepts `--input` (or `--organisations`) pointing to a `.txt`, `.json`, or `.jsonl` file. Emits exactly one JSON terminal envelope per input company directly to `stdout` (JSONL stream) and saves `envelopes.jsonl` (and `{orgnr}.json` profiles) to the output path.*
 
 ### Single Lookup Mode (Instantaneous Daily Ad-Hoc Grading)
 ```bash
 python run.py --orgnr 923609016 --output profiles/
 ```
+
+---
+
+## Output Contract & Terminal Envelope Specification
+Emits exactly one terminal envelope JSON object per supplied organisation number conforming strictly to the Builderr Signalpost output contract (`OUTPUT_CONTRACT.md` and evaluation harness):
+- **Streams to `stdout`**: One clean JSON object per line (JSONL), with all diagnostic logs sent to `stderr`.
+- **Saves to `--output`**: Automatically writes `envelopes.jsonl` (and per-company `{orgnr}.json` files when output is a directory).
+- **Zero Silent Drops**: Every input organisation emits a terminal envelope with explicit terminal states (`complete`, `not_found`, `submission_error`, `blocked_robots`, `budget_exhausted`, `source_error`).
+- **Comprehensive Sections**:
+  - `organisation_number`: 9-digit stable identity key.
+  - `run`: `{"run_id": ..., "started_at": ..., "completed_at": ..., "terminal_status": ...}`.
+  - `claims`: Fact claims with exact `availability` (`available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`), confidence scores, and evidence links.
+  - `evidence`: Cryptographic sha256 content hashes, exact URLs, source classes, and retrieval timestamps.
+  - `modules`: State tracking for `registry`, `financials`, and `website`.
+  - `changes`: Historical diff records between consecutive runs.
+  - `operations`: Request count, wall-clock runtime ms, and third-party cost.
+  - `profile`: Structured company profile data.
 
 ---
 
