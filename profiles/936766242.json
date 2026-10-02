@@ -3,15 +3,15 @@
   "facts": [
     {
       "field_name": "legal_name",
-      "value": "FLOWLYX AS",
+      "value": "WRT1 AS",
       "unit": null,
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -21,10 +21,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -34,10 +34,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -47,10 +47,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": "2025-12-15",
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -60,10 +60,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -73,10 +73,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -94,10 +94,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -107,10 +107,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -120,10 +120,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/936766242",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "3978c74a4590f81fea11f4cde7d42129dad766d976b3e12987a0c2f0dccc5d6b",
+      "content_hash": "057218e33b6ea2f19cc3f0fc7a1211b2cad868bdf509cc477bb8604648f4a3a2",
       "extraction_method": "official_api"
     },
     {
@@ -133,10 +133,10 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936766242",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "d2d0e5a6e95af5156f2015173b061dad45bfac544c8068c0cf3ecb97bb27d446",
+      "content_hash": "4d6f4a1915a0281c51166cdd496de7b7880211f8614ee7a14967eedd14f4c0b0",
       "extraction_method": "official_api"
     },
     {
@@ -146,10 +146,10 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936766242",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "d2d0e5a6e95af5156f2015173b061dad45bfac544c8068c0cf3ecb97bb27d446",
+      "content_hash": "4d6f4a1915a0281c51166cdd496de7b7880211f8614ee7a14967eedd14f4c0b0",
       "extraction_method": "official_api"
     },
     {
@@ -159,18 +159,18 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/936766242",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:12:51.450653Z",
+      "retrieved_at": "2026-10-02T20:53:33.339007Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "d2d0e5a6e95af5156f2015173b061dad45bfac544c8068c0cf3ecb97bb27d446",
+      "content_hash": "4d6f4a1915a0281c51166cdd496de7b7880211f8614ee7a14967eedd14f4c0b0",
       "extraction_method": "official_api"
     }
   ],
-  "last_checked": "2026-09-17T14:12:51.450810Z",
-  "last_changed": "2026-09-17T14:12:51.450810Z",
+  "last_checked": "2026-10-02T20:53:33.339109Z",
+  "last_changed": "2026-10-02T20:53:33.339109Z",
   "source_statuses": {
     "enhetsregisteret": "available",
     "regnskapsregisteret": "available"
   },
-  "executive_summary": "FLOWLYX AS is a Norwegian Aksjeselskap (org. nr. 936766242) currently with 'active' legal status. The company's primary registered activity is annen virksomhet for distribuering av innhold. No annual accounts or employee records are currently filed in public registries."
+  "executive_summary": "WRT1 AS is a Norwegian Aksjeselskap (org. nr. 936766242) currently with 'active' legal status. The company's primary registered activity is annen virksomhet for distribuering av innhold. No annual accounts or employee records are currently filed in public registries."
 }

@@ -1,6 +1,7 @@
 """Asynchronous HTTP client for Brønnøysundregistrene (Brreg) APIs."""
 
 import asyncio
+import hashlib
 import json
 import sys
 import time
@@ -84,6 +85,9 @@ class BrregClient:
         self._external_client = client is not None
         self._semaphore = asyncio.Semaphore(self.settings.brreg_max_concurrency)
 
+        self._snapshots: dict[str, dict[str, Any]] = {}
+        self._org_snapshots: dict[str, list[dict[str, Any]]] = {}
+
         if client is not None:
             self._client = client
         else:
@@ -109,6 +113,19 @@ class BrregClient:
         if not self._external_client and not self._client.is_closed:
             await self._client.aclose()
 
+    def get_snapshot(self, url: str) -> dict[str, Any] | None:
+        """Get the cached snapshot for an exact URL."""
+        return self._snapshots.get(url)
+
+    def get_last_content_hash(self, url: str) -> str | None:
+        """Get the SHA-256 hash of the raw response content for a URL."""
+        snap = self._snapshots.get(url)
+        return snap["content_hash"] if snap else None
+
+    def get_snapshots_for_org(self, orgnr: str) -> list[dict[str, Any]]:
+        """Return all response snapshots collected for a given organisation."""
+        return self._org_snapshots.get(orgnr, [])
+
     async def _request_with_retry(
         self,
         url: str,
@@ -132,6 +149,21 @@ class BrregClient:
                 status_code = response.status_code
 
                 if response.status_code == 200:
+                    raw_bytes = response.content
+                    content_hash = hashlib.sha256(raw_bytes).hexdigest()
+                    snapshot = {
+                        "url": url,
+                        "orgnr": orgnr,
+                        "status_code": 200,
+                        "content_hash": content_hash,
+                        "content_type": response.headers.get("content-type", "application/json"),
+                        "response_body": response.text,
+                        "retrieved_at": datetime.now(timezone.utc).isoformat().replace("+00:00", "Z"),
+                    }
+                    self._snapshots[url] = snapshot
+                    if orgnr:
+                        self._org_snapshots.setdefault(orgnr, []).append(snapshot)
+
                     log_request_event(
                         orgnr=orgnr,
                         endpoint=endpoint_name,

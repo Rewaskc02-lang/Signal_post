@@ -8,10 +8,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -21,10 +21,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -34,10 +34,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -47,10 +47,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": "1997-01-21",
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -60,10 +60,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -73,16 +73,16 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
       "field_name": "business_address",
       "value": {
-        "street": "Nittedalsgata 12",
+        "street": "Voldgata 8",
         "postal_code": "2000",
         "city": "LILLESTRØM",
         "country": "Norge",
@@ -94,10 +94,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -107,10 +107,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
@@ -120,23 +120,127 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
       "extraction_method": "official_api"
     },
     {
       "field_name": "status",
-      "value": "active",
+      "value": "under_liquidation",
       "unit": null,
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/977114209",
       "as_of": null,
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b828121487b5989b9c5e94766d63351a9c8ab2ff3321c4e06653c0b5559dbc00",
+      "content_hash": "ac8f309201fc62996d1c9671148fde3234e6acde7c6ce3b9e20dce5aa110ad06",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "revenue",
+      "value": 3969207.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2023-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "operating_result",
+      "value": 75914.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2023-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "ordinary_result_before_tax",
+      "value": 93240.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2023-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 349172.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2023-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "revenue",
+      "value": 2647770.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2024-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "operating_result",
+      "value": -165468.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2024-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "ordinary_result_before_tax",
+      "value": -165384.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2024-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
+      "extraction_method": "official_api"
+    },
+    {
+      "field_name": "equity",
+      "value": 218868.0,
+      "unit": "NOK",
+      "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
+      "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
+      "as_of": "2024-12-31",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
+      "confidence": "official",
+      "confidence_level": 1.0,
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
       "extraction_method": "official_api"
     },
     {
@@ -146,10 +250,10 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b9a504d30cfc5c69c95ca7d00e9c893c994b23fdd49f314746ccef695fee0cfa",
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
       "extraction_method": "official_api"
     },
     {
@@ -159,10 +263,10 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b9a504d30cfc5c69c95ca7d00e9c893c994b23fdd49f314746ccef695fee0cfa",
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
       "extraction_method": "official_api"
     },
     {
@@ -172,10 +276,10 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b9a504d30cfc5c69c95ca7d00e9c893c994b23fdd49f314746ccef695fee0cfa",
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
       "extraction_method": "official_api"
     },
     {
@@ -185,18 +289,18 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/977114209",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-09-17T14:13:00.604053Z",
+      "retrieved_at": "2026-10-02T20:54:19.057982Z",
       "confidence": "official",
       "confidence_level": 1.0,
-      "content_hash": "b9a504d30cfc5c69c95ca7d00e9c893c994b23fdd49f314746ccef695fee0cfa",
+      "content_hash": "e4572af6f5ddb95bdfe35a89ee9fc9e8c39feb70fd41cfee6f632f3eca6bb042",
       "extraction_method": "official_api"
     }
   ],
-  "last_checked": "2026-09-17T14:13:00.604206Z",
-  "last_changed": "2026-09-17T14:13:00.604206Z",
+  "last_checked": "2026-10-02T20:54:19.058158Z",
+  "last_changed": "2026-10-02T20:54:19.058158Z",
   "source_statuses": {
     "enhetsregisteret": "available",
     "regnskapsregisteret": "available"
   },
-  "executive_summary": "TVIS KJØKKEN AS is a Norwegian Aksjeselskap (org. nr. 977114209) currently with 'active' legal status. The company's primary registered activity is detaljhandel med jernvarer, byggevarer, fargevarer og glass. Latest registry records indicate revenue of 2,862,976 NOK for fiscal year 2025."
+  "executive_summary": "TVIS KJØKKEN AS is a Norwegian Aksjeselskap (org. nr. 977114209) currently with 'under_liquidation' legal status. The company's primary registered activity is detaljhandel med jernvarer, byggevarer, fargevarer og glass. Latest registry records indicate revenue of 2,862,976 NOK for fiscal year 2025."
 }

@@ -26,6 +26,8 @@ def validate_test_envelope(envelope: dict) -> None:
     assert isinstance(envelope["claims"], list)
     assert "evidence" in envelope
     assert isinstance(envelope["evidence"], list)
+    assert "source_snapshots" in envelope
+    assert isinstance(envelope["source_snapshots"], list)
     assert "changes" in envelope
     assert isinstance(envelope["changes"], list)
     assert "errors" in envelope

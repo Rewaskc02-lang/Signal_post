@@ -109,10 +109,17 @@ async def build_profile(
         )
 
         fetch_time = datetime.now(timezone.utc)
+        enhet_hash = brreg_client.get_last_content_hash(enhet_url) if hasattr(brreg_client, "get_last_content_hash") else None
+        regnskap_hash = brreg_client.get_last_content_hash(regnskap_url) if hasattr(brreg_client, "get_last_content_hash") else None
 
         # 3. Extract core registry facts
         all_facts: list[CompanyFact] = []
-        enhet_facts = extract_enhet_facts(enhet_data, endpoint_url=enhet_url, retrieved_at=fetch_time)
+        enhet_facts = extract_enhet_facts(
+            enhet_data,
+            endpoint_url=enhet_url,
+            retrieved_at=fetch_time,
+            content_hash=enhet_hash,
+        )
         all_facts.extend(enhet_facts)
 
         if regnskap_data:
@@ -120,6 +127,7 @@ async def build_profile(
                 regnskap_data,
                 endpoint_url=regnskap_url,
                 retrieved_at=fetch_time,
+                content_hash=regnskap_hash,
             )
             all_facts.extend(regnskap_facts)
 

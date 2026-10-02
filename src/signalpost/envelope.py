@@ -44,6 +44,7 @@ def build_terminal_envelope(
     cost_usd: float = 0.0,
     error: str | None = None,
     terminal_state: str | None = None,
+    snapshots: list[dict[str, Any]] | None = None,
 ) -> dict[str, Any]:
     """Emit exactly one unified terminal envelope for a supplied organisation number.
 
@@ -177,6 +178,17 @@ def build_terminal_envelope(
         },
         "claims": claims,
         "evidence": evidence_list,
+        "source_snapshots": [
+            {
+                "url": s.get("url", ""),
+                "status_code": s.get("status_code", 200),
+                "content_sha256": s.get("content_hash") or s.get("content_sha256", ""),
+                "content_type": s.get("content_type", "application/json"),
+                "retrieved_at": s.get("retrieved_at", completed_iso),
+                "response_body": s.get("response_body", ""),
+            }
+            for s in (snapshots or [])
+        ],
         "modules": modules,
         "changes": changes,
         "errors": errors,

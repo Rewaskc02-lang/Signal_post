@@ -241,6 +241,18 @@ async def process_single_orgnr(
                 tokens_out = summary_res.completion_tokens
                 cost = summary_res.estimated_cost_usd
 
+            # Persist captured raw HTTP response snapshots for evaluator claim verification
+            org_snapshots = client.get_snapshots_for_org(cleaned_orgnr) if hasattr(client, "get_snapshots_for_org") else []
+            for snap in org_snapshots:
+                storage.save_snapshot(
+                    url=snap["url"],
+                    content_hash=snap["content_hash"],
+                    status_code=snap["status_code"],
+                    content_type=snap.get("content_type", "application/json"),
+                    response_body=snap["response_body"],
+                    retrieved_at=snap["retrieved_at"],
+                )
+
             # Save individual JSON profile to output directory if specified as a directory
             if output_dir is not None and not str(output_dir).endswith(".jsonl"):
                 output_dir.mkdir(parents=True, exist_ok=True)
@@ -266,6 +278,7 @@ async def process_single_orgnr(
                 runtime_ms=(time.time() - t0) * 1000,
                 cost_usd=cost,
                 terminal_state="complete",
+                snapshots=org_snapshots,
             )
             sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
             sys.stdout.flush()

@@ -32,6 +32,7 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
   - `run`: `{"run_id": ..., "started_at": ..., "completed_at": ..., "terminal_status": ...}`.
   - `claims`: Fact claims with exact `availability` (`available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`), confidence scores, and evidence links.
   - `evidence`: Cryptographic sha256 content hashes, exact URLs, source classes, and retrieval timestamps.
+  - `source_snapshots`: Raw HTTP response snapshots (URL, status_code, content_type, response_body, and raw content sha256) enabling instant offline claim verification.
   - `modules`: State tracking for `registry`, `financials`, and `website`.
   - `changes`: Historical diff records between consecutive runs.
   - `operations`: Request count, wall-clock runtime ms, and third-party cost.

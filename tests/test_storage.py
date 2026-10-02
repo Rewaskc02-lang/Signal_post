@@ -112,3 +112,30 @@ def test_storage_fact_history_recording(temp_storage: Storage) -> None:
     assert history[0].extraction_method == "official_api"
     assert history[1].status == "new"
     assert history[1].content_hash == "abc123hash"
+
+
+def test_storage_source_snapshots(temp_storage: Storage) -> None:
+    url = "https://data.brreg.no/enhetsregisteret/api/enheter/923609016"
+    content_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    body = '{"organisasjonsnummer":"923609016","navn":"EQUINOR ASA"}'
+    now_iso = "2026-10-02T20:00:00Z"
+
+    temp_storage.save_snapshot(
+        url=url,
+        content_hash=content_hash,
+        status_code=200,
+        content_type="application/json",
+        response_body=body,
+        retrieved_at=now_iso,
+    )
+
+    by_hash = temp_storage.get_snapshot(content_hash)
+    assert by_hash is not None
+    assert by_hash["url"] == url
+    assert by_hash["content_hash"] == content_hash
+    assert by_hash["response_body"] == body
+    assert by_hash["status_code"] == 200
+
+    by_url = temp_storage.get_snapshot_by_url(url)
+    assert by_url is not None
+    assert by_url["content_hash"] == content_hash

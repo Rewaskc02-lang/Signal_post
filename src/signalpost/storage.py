@@ -82,6 +82,18 @@ class Storage:
 
                 CREATE INDEX IF NOT EXISTS idx_fact_history_recorded
                 ON fact_history(orgnr, recorded_at);
+
+                CREATE TABLE IF NOT EXISTS source_snapshots (
+                    url TEXT NOT NULL,
+                    content_hash TEXT PRIMARY KEY,
+                    status_code INTEGER NOT NULL,
+                    content_type TEXT,
+                    response_body TEXT NOT NULL,
+                    retrieved_at TEXT NOT NULL
+                );
+
+                CREATE INDEX IF NOT EXISTS idx_source_snapshots_url
+                ON source_snapshots(url);
                 """
             )
 
@@ -217,6 +229,44 @@ class Storage:
                 )
             )
         return results
+
+    def save_snapshot(
+        self,
+        url: str,
+        content_hash: str,
+        status_code: int,
+        content_type: str | None,
+        response_body: str,
+        retrieved_at: str,
+    ) -> None:
+        """Persist a raw source HTTP response snapshot for auditability and verification."""
+        conn = self._get_connection()
+        with conn:
+            conn.execute(
+                """
+                INSERT INTO source_snapshots (url, content_hash, status_code, content_type, response_body, retrieved_at)
+                VALUES (?, ?, ?, ?, ?, ?)
+                ON CONFLICT(content_hash) DO UPDATE SET
+                    url = excluded.url,
+                    response_body = excluded.response_body,
+                    retrieved_at = excluded.retrieved_at
+                """,
+                (url, content_hash, status_code, content_type or "application/json", response_body, retrieved_at),
+            )
+
+    def get_snapshot(self, content_hash: str) -> dict[str, Any] | None:
+        """Retrieve a raw source snapshot by its content hash."""
+        conn = self._get_connection()
+        cur = conn.execute("SELECT * FROM source_snapshots WHERE content_hash = ?", (content_hash,))
+        row = cur.fetchone()
+        return dict(row) if row else None
+
+    def get_snapshot_by_url(self, url: str) -> dict[str, Any] | None:
+        """Retrieve the latest raw source snapshot by its URL."""
+        conn = self._get_connection()
+        cur = conn.execute("SELECT * FROM source_snapshots WHERE url = ? ORDER BY retrieved_at DESC LIMIT 1", (url,))
+        row = cur.fetchone()
+        return dict(row) if row else None
 
     def close(self) -> None:
         """Close database connection."""
