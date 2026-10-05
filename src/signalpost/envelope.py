@@ -127,6 +127,9 @@ def build_terminal_envelope(
             claims.append({
                 "field": fact.field_name,
                 "value": fact.value,
+                "source_url": source_url,
+                "retrieved_at": utc_iso(fact.retrieved_at),
+                "supporting_value": fact.value,
                 "availability": "available",
                 "confidence": conf,
                 "evidence_ids": [ev_id],

@@ -52,19 +52,23 @@ async def test_enrich_from_website_verified_extracts_description(capsys: pytest.
     """
 
     with respx.mock() as respx_mock:
-        # Mock robots.txt (allow all)
-        respx_mock.get(f"{website}/robots.txt").respond(status_code=200, text="User-agent: *\nAllow: /")
-        # Mock homepage
+        # Mock homepage only (no robots.txt precheck in new implementation)
         respx_mock.get(website).respond(status_code=200, text=html, headers={"content-type": "text/html"})
 
         facts = await enrich_from_website(website, orgnr, legal_name)
 
-    assert len(facts) == 1
-    assert facts[0].field_name == "website_description"
-    assert facts[0].value == "Equinor is an international energy company committed to long-term value creation."
-    assert facts[0].confidence == "unverified_secondary"
-    assert facts[0].source_name == "Company Website"
-    assert facts[0].source_url == website
+    facts_by_field = {f.field_name: f for f in facts}
+    assert "website" in facts_by_field
+    assert facts_by_field["website"].value == "equinor.com"
+    assert facts_by_field["website"].source_name == "Company Website"
+    assert facts_by_field["website"].source_url == website
+    assert facts_by_field["website"].confidence == "verified_secondary"
+
+    assert "website_description" in facts_by_field
+    assert facts_by_field["website_description"].value == "Equinor is an international energy company committed to long-term value creation."
+    assert facts_by_field["website_description"].confidence == "verified_secondary"
+    assert facts_by_field["website_description"].source_name == "Company Website"
+    assert facts_by_field["website_description"].source_url == website
 
 
 @pytest.mark.asyncio
@@ -81,16 +85,8 @@ async def test_enrich_from_website_unverified_returns_zero_facts(capsys: pytest.
     </html>
     """
 
-    with respx.mock(assert_all_called=False) as respx_mock:
-        respx_mock.get(f"{website}/robots.txt").respond(status_code=200, text="User-agent: *\nAllow: /")
+    with respx.mock() as respx_mock:
         respx_mock.get(website).respond(status_code=200, text=unrelated_html, headers={"content-type": "text/html"})
-        # Candidate pages return 404
-        respx_mock.get(f"{website}/om-oss").respond(status_code=404)
-        respx_mock.get(f"{website}/om").respond(status_code=404)
-        respx_mock.get(f"{website}/about").respond(status_code=404)
-        respx_mock.get(f"{website}/about-us").respond(status_code=404)
-        respx_mock.get(f"{website}/kontakt").respond(status_code=404)
-        respx_mock.get(f"{website}/contact").respond(status_code=404)
 
         facts = await enrich_from_website(website, orgnr, legal_name)
 
@@ -102,14 +98,14 @@ async def test_enrich_from_website_unverified_returns_zero_facts(capsys: pytest.
 
 
 @pytest.mark.asyncio
-async def test_enrich_from_website_respects_robots_txt() -> None:
+async def test_enrich_from_website_respects_blocked_homepage() -> None:
+    """If the server returns 403 on the homepage, website is marked blocked."""
     website = "https://www.secret-site.com"
     orgnr = "923609016"
     legal_name = "EQUINOR ASA"
 
     with respx.mock() as respx_mock:
-        # Disallow all bots
-        respx_mock.get(f"{website}/robots.txt").respond(status_code=200, text="User-agent: *\nDisallow: /")
+        respx_mock.get(website).respond(status_code=403)
 
         facts = await enrich_from_website(website, orgnr, legal_name)
 
@@ -123,19 +119,16 @@ async def test_enrich_from_website_with_status_explicit_states() -> None:
     orgnr = "923609016"
     legal_name = "EQUINOR ASA"
 
-    # 1. Blocked via robots.txt
+    # 1. Blocked via 403 on homepage
     with respx.mock() as respx_mock:
-        respx_mock.get("https://www.blocked.com/robots.txt").respond(status_code=200, text="User-agent: *\nDisallow: /")
+        respx_mock.get("https://www.blocked.com").respond(status_code=403)
         facts, status = await enrich_from_website_with_status("https://www.blocked.com", orgnr, legal_name)
     assert len(facts) == 0
     assert status == "blocked"
 
-    # 2. Ambiguous (no identity proof found)
-    with respx.mock(assert_all_called=False) as respx_mock:
-        respx_mock.get("https://www.ambiguous.com/robots.txt").respond(status_code=200, text="User-agent: *\nAllow: /")
+    # 2. Ambiguous (no identity proof found on homepage)
+    with respx.mock() as respx_mock:
         respx_mock.get("https://www.ambiguous.com").respond(status_code=200, text="<html>No proof</html>", headers={"content-type": "text/html"})
-        for p in ["/om-oss", "/om", "/about", "/about-us", "/kontakt", "/contact"]:
-            respx_mock.get(f"https://www.ambiguous.com{p}").respond(status_code=404)
         facts, status = await enrich_from_website_with_status("https://www.ambiguous.com", orgnr, legal_name)
     assert len(facts) == 0
     assert status == "ambiguous"
@@ -143,11 +136,15 @@ async def test_enrich_from_website_with_status_explicit_states() -> None:
     # 3. Available (verified with content hash)
     html = '<html><head><meta name="description" content="Official site."></head><body>NO 923609016 MVA</body></html>'
     with respx.mock() as respx_mock:
-        respx_mock.get("https://www.verified.com/robots.txt").respond(status_code=200, text="User-agent: *\nAllow: /")
         respx_mock.get("https://www.verified.com").respond(status_code=200, text=html, headers={"content-type": "text/html"})
         facts, status = await enrich_from_website_with_status("https://www.verified.com", orgnr, legal_name)
-    assert len(facts) == 1
     assert status == "available"
-    assert facts[0].content_hash is not None
-    assert len(facts[0].content_hash) == 64
-    assert facts[0].extraction_method == "html_meta"
+    facts_map = {f.field_name: f for f in facts}
+    assert "website" in facts_map
+    assert facts_map["website"].value == "verified.com"
+    assert facts_map["website"].content_hash is not None
+    assert len(facts_map["website"].content_hash) == 64
+    assert facts_map["website"].extraction_method == "http_verification"
+    assert "website_description" in facts_map
+    assert facts_map["website_description"].value == "Official site."
+    assert facts_map["website_description"].extraction_method == "html_meta"

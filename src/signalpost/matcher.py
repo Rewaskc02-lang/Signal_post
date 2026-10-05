@@ -25,8 +25,20 @@ def deduplicate_facts(facts: list[CompanyFact]) -> list[CompanyFact]:
     """Deduplicate facts having the same (field_name, as_of).
 
     Confidence priority: 'official' > 'verified_secondary' > 'unverified_secondary'.
+    Exception: For 'website', live verified external evidence from the actual domain
+    ('verified_secondary' from 'Company Website') supersedes registry pointer strings.
     For ties, keeps the most recently retrieved fact.
     """
+    has_verified_website = any(
+        f.field_name == "website" and f.source_name == "Company Website"
+        for f in facts
+    )
+    if has_verified_website:
+        facts = [
+            f for f in facts
+            if not (f.field_name == "website" and f.source_name != "Company Website")
+        ]
+
     priority = {
         "official": 3,
         "verified_secondary": 2,
@@ -53,7 +65,7 @@ def deduplicate_facts(facts: list[CompanyFact]) -> list[CompanyFact]:
 
 async def build_profile(
     orgnr: str,
-    enable_website_enrichment: bool = False,
+    enable_website_enrichment: bool = True,
     client: BrregClient | None = None,
     settings: Settings | None = None,
 ) -> CompanyProfile:
@@ -147,6 +159,7 @@ async def build_profile(
                     orgnr=cleaned_orgnr,
                     legal_name=legal_name_val,
                     client=brreg_client._client,
+                    brreg_client=brreg_client,
                 )
                 source_statuses["website"] = web_status
                 all_facts.extend(enrichment_facts)

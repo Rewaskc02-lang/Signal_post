@@ -86,7 +86,12 @@ def generate_fact_note(fact: CompanyFact) -> str:
         return f"Official registered mailing address in {city or 'Norway'}."
 
     if field == "website":
-        return f"Official website registered with Brønnøysundregistrene: {val}."
+        if "brreg" in fact.source_url.lower():
+            return f"Official website registered with Brønnøysundregistrene: {val}."
+        return f"Verified company website: {val}."
+
+    if field == "website_title":
+        return f"Verified page title from company website: {val}."
 
     if field == "website_description":
         return "Verified secondary description extracted directly from company homepage."

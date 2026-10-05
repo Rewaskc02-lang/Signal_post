@@ -126,6 +126,34 @@ class BrregClient:
         """Return all response snapshots collected for a given organisation."""
         return self._org_snapshots.get(orgnr, [])
 
+    def record_snapshot(
+        self,
+        url: str,
+        orgnr: str,
+        status_code: int,
+        content_hash: str,
+        response_body: str,
+        content_type: str = "text/html",
+        retrieved_at: str | None = None,
+    ) -> None:
+        """Explicitly record a response snapshot (e.g. from external website crawl)."""
+        if retrieved_at is None:
+            retrieved_at = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+        snapshot = {
+            "url": url,
+            "orgnr": orgnr,
+            "status_code": status_code,
+            "content_hash": content_hash,
+            "content_type": content_type,
+            "response_body": response_body,
+            "retrieved_at": retrieved_at,
+        }
+        self._snapshots[url] = snapshot
+        if orgnr:
+            existing = self._org_snapshots.setdefault(orgnr, [])
+            if not any(s.get("content_hash") == content_hash and s.get("url") == url for s in existing):
+                existing.append(snapshot)
+
     async def _request_with_retry(
         self,
         url: str,

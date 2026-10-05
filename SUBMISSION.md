@@ -11,9 +11,9 @@
 
 ### Batch Ingestion Mode (Evaluating List of Organisation Numbers)
 ```bash
-python run.py --input orgnumbers.txt --output profiles/ --max-requests 2000 --max-seconds 2400
+python run.py --input orgnumbers.txt --output profiles/ --max-requests 5000 --max-seconds 2400
 ```
-*Note: Accepts `--input` (or `--organisations`) pointing to a `.txt`, `.json`, or `.jsonl` file. Emits exactly one JSON terminal envelope per input company directly to `stdout` (JSONL stream) and saves `envelopes.jsonl` (and `{orgnr}.json` profiles) to the output path.*
+*Note: Accepts `--input` (or `--organisations`) pointing to a `.txt`, `.json`, or `.jsonl` file. Emits exactly one JSON terminal envelope per input company directly to `stdout` (JSONL stream) and saves `envelopes.jsonl` (and `{orgnr}.json` profiles) to the output path. Website enrichment is **on by default** — use `--no-enrich` to disable.*
 
 ### Single Lookup Mode (Instantaneous Daily Ad-Hoc Grading)
 ```bash
@@ -30,9 +30,9 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 - **Comprehensive Sections**:
   - `organisation_number`: 9-digit stable identity key.
   - `run`: `{"run_id": ..., "started_at": ..., "completed_at": ..., "terminal_status": ...}`.
-  - `claims`: Fact claims with exact `availability` (`available`, `not_available`, `blocked`, `not_applicable`, `ambiguous`, `failed`), confidence scores, and evidence links.
-  - `evidence`: Cryptographic sha256 content hashes, exact URLs, source classes, and retrieval timestamps.
-  - `source_snapshots`: Raw HTTP response snapshots (URL, status_code, content_type, response_body, and raw content sha256) enabling instant offline claim verification.
+  - `claims`: Fact claims with exact `availability`, `source_url`, `retrieved_at`, and `supporting_value` for every claim, plus confidence scores and evidence IDs.
+  - `evidence`: Cryptographic sha256 content hashes, exact source URLs (e.g. `https://www.elopak.com/`), source classes, and retrieval timestamps.
+  - `source_snapshots`: Raw HTTP response snapshots (URL, status_code, content_type, full response_body, and raw content sha256) enabling instant offline claim verification. Includes both Brreg API JSON bodies and live company website HTML pages.
   - `modules`: State tracking for `registry`, `financials`, and `website`.
   - `changes`: Historical diff records between consecutive runs.
   - `operations`: Request count, wall-clock runtime ms, and third-party cost.
@@ -57,12 +57,12 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 
 | Scope | Ingestion Requests | Wall-Clock Time | Registry Cost (Brreg) | LLM Summary Cost | Total Run Cost |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **100 Companies (Daily Grading Run)** | ~200 requests | **~3.5s** | **$0.00** (Free API) | **$0.000** *(or $0.024 with LLM)* | **$0.00 USD** *(or $0.024 USD)* |
-| **1,000 Companies (Observed Batch Run)** | **2,001 requests** | **39.02s** | **$0.00** (Free API) | **$0.000** *(or $0.241 with LLM)* | **$0.00 USD** *(or $0.241 USD)* |
+| **100 Companies (Daily Grading Run)** | ~210 requests | **~5.6s** | **$0.00** (Free API) | **$0.000** *(or $0.024 with LLM)* | **$0.00 USD** *(or $0.024 USD)* |
+| **1,000 Companies (Observed Batch Run)** | **2,112 requests** | **56.23s** | **$0.00** (Free API) | **$0.000** *(or $0.241 with LLM)* | **$0.00 USD** *(or $0.241 USD)* |
 
 - **Strict Challenge Budget Compliance**:
-  - Request Limit: 2,001 requests over 2 sessions (well within daily limits of 2,000/session).
-  - Time Limit: 39.02s total execution time (well under the 45-minute daily cap).
+  - Request Limit: 2,112 requests for 1,000 companies (well within 5,000 cap).
+  - Time Limit: 56.23s total execution time (well under 2,400s cap).
   - Total Declared Cost: **$0.00 USD** (deterministic) / **$0.24 USD** (with LLM), far below the $10.00 cap.
 
 ---
@@ -71,7 +71,7 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 1. **Brønnøysundregistrene (Enhetsregisteret & Regnskapsregisteret)**:
    - Official Norwegian Government business register made available under the Norwegian Licence for Open Government Data (NLOD / CC BY 4.0). Completely public and free.
 2. **Company Primary Websites (Secondary Source)**:
-   - Evaluated under strict `robots.txt` compliance with an automated Anti-Hallucination verification gate (requiring exact `orgnr` or registered `legal_name` proof).
+   - Each company's registered `hjemmeside` URL (from Brreg) is fetched directly (1 HTTP GET per company). Identity is verified by matching the organisation number or registered legal name in the live page content. Verified pages produce three external claims (`website`, `website_title`, `website_description`) with `source_url` set to the actual live URL (e.g. `https://www.elopak.com/`), byte-level SHA-256 content hash, and full response body retained in `source_snapshots`.
 
 ---
 

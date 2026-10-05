@@ -149,7 +149,7 @@ async def process_single_orgnr(
     budget: BudgetTracker,
     semaphore: asyncio.Semaphore,
     client: BrregClient,
-    enable_enrichment: bool = False,
+    enable_enrichment: bool = True,
     enable_summary: bool = True,
     enable_llm: bool = False,
     quiet: bool = False,
@@ -355,7 +355,7 @@ async def run_pipeline(
     max_requests: int = 2000,
     max_seconds: float = 2400.0,
     concurrency: int = 15,
-    enable_enrichment: bool = False,
+    enable_enrichment: bool = True,
     enable_summary: bool = True,
     enable_llm: bool = False,
     db_path: str = "signalpost.db",
@@ -545,7 +545,13 @@ def build_arg_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--enrich",
         action="store_true",
-        help="Enable secondary source website enrichment.",
+        default=True,
+        help="Enable secondary source website enrichment (default: enabled).",
+    )
+    parser.add_argument(
+        "--no-enrich",
+        action="store_true",
+        help="Disable secondary source website enrichment.",
     )
     parser.add_argument(
         "--no-summary",
@@ -608,7 +614,7 @@ async def async_main() -> int:
         max_requests=args.max_requests,
         max_seconds=args.max_seconds,
         concurrency=args.concurrency,
-        enable_enrichment=args.enrich,
+        enable_enrichment=not args.no_enrich,
         enable_summary=not args.no_summary,
         enable_llm=args.llm,
         db_path=args.db,

@@ -95,15 +95,18 @@ async def test_build_profile_clean_company(test_settings: Settings) -> None:
     assert facts_dict["revenue"].as_of == date(2024, 12, 31)
     assert facts_dict["revenue"].unit == "NOK"
 
-    # Website enrichment fact
+    # Website enrichment facts
     assert facts_dict["website_description"].value == "Official Equinor website."
-    assert facts_dict["website_description"].confidence == "unverified_secondary"
+    assert facts_dict["website_description"].confidence == "verified_secondary"
+    assert facts_dict["website"].value == "equinor.com"
+    assert facts_dict["website"].source_url == "https://www.equinor.com"
+    assert facts_dict["website"].confidence == "verified_secondary"
 
     # Guarantee: Every single fact has source_url and retrieved_at populated
     for fact in profile.facts:
         assert fact.source_url is not None and len(fact.source_url) > 0
         assert fact.retrieved_at is not None
-        assert fact.confidence in ("official", "unverified_secondary")
+        assert fact.confidence in ("official", "verified_secondary", "unverified_secondary")
 
 
 @pytest.mark.asyncio
