@@ -216,6 +216,15 @@ async def process_single_orgnr(
 
         try:
             prev_profile = storage.get_profile(cleaned_orgnr)
+            if prev_profile is None and output_dir is not None:
+                existing_file = output_dir / f"{cleaned_orgnr}.json"
+                if existing_file.exists():
+                    try:
+                        with open(existing_file, "r", encoding="utf-8") as f:
+                            data = json.load(f)
+                        prev_profile = CompanyProfile.model_validate(data)
+                    except Exception:
+                        pass
 
             # Build profile from live registry
             fresh_profile = await build_profile(
