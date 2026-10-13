@@ -148,3 +148,87 @@ async def test_enrich_from_website_with_status_explicit_states() -> None:
     assert "website_description" in facts_map
     assert facts_map["website_description"].value == "Official site."
     assert facts_map["website_description"].extraction_method == "html_meta"
+
+
+@pytest.mark.asyncio
+async def test_enrich_from_website_restricted_domain_policy() -> None:
+    """Restricted policy domains (e.g. facebook.com, linkedin.com) are blocked immediately."""
+    from signalpost.extractors.website_enrichment import enrich_from_website_with_status
+
+    orgnr = "923609016"
+    legal_name = "EQUINOR ASA"
+
+    # Social media / restricted domain should be blocked with 0 requests
+    facts, status = await enrich_from_website_with_status("https://www.facebook.com/equinor", orgnr, legal_name)
+    assert len(facts) == 0
+    assert status == "blocked"
+
+    facts, status = await enrich_from_website_with_status("https://linkedin.com/company/equinor", orgnr, legal_name)
+    assert len(facts) == 0
+    assert status == "blocked"
+
+
+@pytest.mark.asyncio
+async def test_enrich_from_website_implausible_url_skipped() -> None:
+    """Garbage / placeholder strings are recognized as missing with 0 HTTP calls."""
+    from signalpost.extractors.website_enrichment import enrich_from_website_with_status
+
+    orgnr = "923609016"
+    legal_name = "EQUINOR ASA"
+
+    for bad_url in ["-", "ingen", "ikke oppgitt", "http://", "none", ""]:
+        facts, status = await enrich_from_website_with_status(bad_url, orgnr, legal_name)
+        assert len(facts) == 0
+        assert status == "missing"
+
+
+def test_is_identity_verified_edge_cases() -> None:
+    """Edge cases for identity verification on web pages."""
+    orgnr = "923609016"
+    legal_name = "EQUINOR ASA"
+
+    # 1. Hyphenated org number
+    assert is_identity_verified_on_page("Org: 923-609-016", orgnr, legal_name) is True
+
+    # 2. Dotted org number
+    assert is_identity_verified_on_page("Foretaksnr: 923.609.016", orgnr, legal_name) is True
+
+    # 3. HTML tags inside or surrounding number
+    assert is_identity_verified_on_page("<td>923 609 016</td>", orgnr, legal_name) is True
+    assert is_identity_verified_on_page("<span>923</span> <span>609</span> <span>016</span>", orgnr, legal_name) is True
+
+    # 4. HTML entities in company name (e.g. &amp;, &oslash;)
+    assert is_identity_verified_on_page(
+        "Welcome to A &amp; B AS corporate site.",
+        orgnr,
+        "A & B AS",
+    ) is True
+
+    # 5. Parked / for sale domain rejected
+    parked_html = "<html><body><h1>This domain is for sale!</h1><p>Org: 923609016</p></body></html>"
+    assert is_identity_verified_on_page(parked_html, orgnr, legal_name) is False
+
+    sedo_html = "<html><body>Sedoparking - Buy this domain</body></html>"
+    assert is_identity_verified_on_page(sedo_html, orgnr, legal_name) is False
+
+
+def test_extract_page_title_and_meta_description_resilience() -> None:
+    """Title and meta description extractors handle attributes, unescaping, and alternate formats."""
+    from signalpost.extractors.website_enrichment import extract_meta_description, extract_page_title
+
+    # Title with attributes & HTML entity
+    html_title = '<title lang="no" class="site-title">Equinor &amp; Partners</title>'
+    assert extract_page_title(html_title) == "Equinor & Partners"
+
+    # Meta description with content before name
+    html_meta_1 = '<meta content="Leading energy company &amp; supplier." name="description">'
+    assert extract_meta_description(html_meta_1) == "Leading energy company & supplier."
+
+    # Meta description with extra attributes
+    html_meta_2 = '<meta name="description" lang="en" content="Global energy leader.">'
+    assert extract_meta_description(html_meta_2) == "Global energy leader."
+
+    # og:description fallback
+    html_meta_3 = '<meta property="og:description" content="Official Equinor open graph profile.">'
+    assert extract_meta_description(html_meta_3) == "Official Equinor open graph profile."
+

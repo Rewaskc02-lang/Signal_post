@@ -253,3 +253,51 @@ def test_estimate_token_cost() -> None:
     cost = estimate_token_cost(prompt_tokens=1000, completion_tokens=500)
     # (1000/1M * 0.15) + (500/1M * 0.60) = 0.00015 + 0.00030 = 0.00045
     assert cost == 0.00045
+
+
+@pytest.mark.asyncio
+async def test_generate_company_summary_rejects_hallucinated_numbers() -> None:
+    """Anti-hallucination numeric tripwire rejects candidate with fabricated numbers."""
+    profile = CompanyProfile(
+        orgnr="923609016",
+        facts=[
+            CompanyFact(
+                field_name="legal_name",
+                value="EQUINOR ASA",
+                source_name="Enhet",
+                source_url="https://brreg.no",
+                confidence="official",
+            ),
+        ],
+    )
+
+    # Candidate invents year "1972" and revenue "999000000" not in facts
+    mock_llm_response = {
+        "choices": [
+            {
+                "message": {
+                    "content": "Equinor ASA was founded in 1972 and reported revenue of 999000000 NOK."
+                }
+            }
+        ],
+        "usage": {"prompt_tokens": 50, "completion_tokens": 20},
+    }
+
+    mock_api_url = "https://openrouter.ai/api/v1/chat/completions"
+    with respx.mock() as respx_mock:
+        respx_mock.post(mock_api_url).respond(status_code=200, json=mock_llm_response)
+
+        result = await generate_company_summary(
+            profile=profile,
+            enable_llm=True,
+            api_key="sk-or-test",
+            provider="openrouter",
+            model="google/gemini-2.5-flash",
+        )
+
+    # Tripwire triggered -> rejected LLM candidate and returned verified deterministic summary!
+    assert result.is_llm_generated is False
+    assert "EQUINOR ASA" in result.summary_text
+    assert "1972" not in result.summary_text
+    assert "999000000" not in result.summary_text
+

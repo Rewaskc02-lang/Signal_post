@@ -44,6 +44,7 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 - **Primary Data Registry**: Brønnøysundregistrene (Brreg) official REST APIs
   - `Enhetsregisteret`: `https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}` (core corporate data: name, org form, addresses, employees, foundation date, capital, accounting year, sector, business purpose)
   - `Regnskapsregisteret`: `https://data.brreg.no/regnskapsregisteret/regnskap/{orgnr}` (filed annual accounts: revenue, operating result, pre-tax ordinary result, net annual income, equity, total assets, total debt)
+  - `Roller`: `https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}/roller` (official leadership & governance: CEO / daglig leder, Board Chair / styrets leder, Auditor / revisor, Accountant / regnskapsfører)
   - `Bulk Export`: `https://data.brreg.no/enhetsregisteret/api/enheter/lastned` (active entity sampling)
   - *Authentication*: Free, public, no API key required.
 - **Natural Language Summary Model**:

@@ -13,6 +13,7 @@ from signalpost.brreg_client import (
 from signalpost.config import Settings, settings as default_settings
 from signalpost.extractors.brreg_enhet import extract_enhet_facts
 from signalpost.extractors.brreg_regnskap import extract_regnskap_facts
+from signalpost.extractors.brreg_roller import extract_roller_facts
 from signalpost.extractors.website_enrichment import (
     enrich_from_website,
     enrich_from_website_with_status,
@@ -109,20 +110,25 @@ async def build_profile(
     try:
         enhet_url = f"{cfg.brreg_enhet_base_url}/{cleaned_orgnr}"
         regnskap_url = f"{cfg.brreg_regnskap_base_url}/{cleaned_orgnr}"
+        roller_url = f"{cfg.brreg_enhet_base_url}/{cleaned_orgnr}/roller"
 
-        # 2. Concurrently fetch Enhetsregisteret and Regnskapsregisteret
+        # 2. Concurrently fetch Enhetsregisteret, Regnskapsregisteret, and Roller
         enhet_task = brreg_client.fetch_enhet(cleaned_orgnr)
         regnskap_task = brreg_client.fetch_regnskap(cleaned_orgnr)
+        roller_task = brreg_client.fetch_roller(cleaned_orgnr)
 
         # Regnskap 404 is normal for entities without public accounts (e.g. ENK, associations)
-        enhet_data, regnskap_data = await asyncio.gather(
+        # Roller 404 is normal for entities without registered roles
+        enhet_data, regnskap_data, roller_data = await asyncio.gather(
             enhet_task,
             _fetch_regnskap_safe(regnskap_task),
+            _fetch_roller_safe(roller_task),
         )
 
         fetch_time = datetime.now(timezone.utc)
         enhet_hash = brreg_client.get_last_content_hash(enhet_url) if hasattr(brreg_client, "get_last_content_hash") else None
         regnskap_hash = brreg_client.get_last_content_hash(regnskap_url) if hasattr(brreg_client, "get_last_content_hash") else None
+        roller_hash = brreg_client.get_last_content_hash(roller_url) if hasattr(brreg_client, "get_last_content_hash") else None
 
         # 3. Extract core registry facts
         all_facts: list[CompanyFact] = []
@@ -143,10 +149,20 @@ async def build_profile(
             )
             all_facts.extend(regnskap_facts)
 
+        if roller_data:
+            roller_facts = extract_roller_facts(
+                roller_data,
+                endpoint_url=roller_url,
+                retrieved_at=fetch_time,
+                content_hash=roller_hash,
+            )
+            all_facts.extend(roller_facts)
+
         # 4. Optional website enrichment with strict anti-hallucination verification
         source_statuses: dict[str, str] = {
             "enhetsregisteret": "available",
             "regnskapsregisteret": "available" if regnskap_data else "missing",
+            "roller": "available" if roller_data else "missing",
         }
 
         if enable_website_enrichment:
@@ -187,3 +203,15 @@ async def _fetch_regnskap_safe(task: Any) -> list[dict[str, Any]]:
         return await task
     except (NotFoundError, BrregError):
         return []
+    except Exception:
+        return []
+
+
+async def _fetch_roller_safe(task: Any) -> dict[str, Any] | None:
+    """Safely await roller fetch, returning None if not found (404) or unavailable."""
+    try:
+        return await task
+    except (NotFoundError, BrregError):
+        return None
+    except Exception:
+        return None

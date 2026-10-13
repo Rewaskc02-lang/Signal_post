@@ -137,3 +137,37 @@ def default_settings_base(url: str) -> str:
     if "enheter" in url:
         return settings.brreg_enhet_base_url
     return settings.brreg_regnskap_base_url
+
+
+def test_read_organisation_inputs_edge_cases() -> None:
+    """Test BOM handling, semicolon CSV, and extended JSON payload structures."""
+    from signalpost.cli import read_organisation_inputs
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        # 1. UTF-8 BOM file
+        bom_file = Path(tmpdir) / "bom.txt"
+        bom_file.write_bytes("\ufeff923609016\n984851006\n".encode("utf-8"))
+        orgs = read_organisation_inputs(bom_file)
+        assert orgs == ["923609016", "984851006"]
+
+        # 2. Scandinavian semicolon-delimited CSV
+        semi_file = Path(tmpdir) / "scandi.csv"
+        semi_file.write_text("923609016;984851006;986228608\n", encoding="utf-8")
+        orgs = read_organisation_inputs(semi_file)
+        assert orgs == ["923609016", "984851006", "986228608"]
+
+        # 3. JSON with 'data' key and nested dict objects
+        json_file = Path(tmpdir) / "eval.json"
+        json_file.write_text(
+            '{"data": [{"orgnr": "923609016"}, {"organisation_number": "984851006"}]}',
+            encoding="utf-8",
+        )
+        orgs = read_organisation_inputs(json_file)
+        assert orgs == ["923609016", "984851006"]
+
+        # 4. JSON with nested array
+        json_nested = Path(tmpdir) / "nested.json"
+        json_nested.write_text('{"records": [["923609016", "984851006"]]}', encoding="utf-8")
+        orgs = read_organisation_inputs(json_nested)
+        assert orgs == ["923609016", "984851006"]
+

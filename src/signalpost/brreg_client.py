@@ -191,7 +191,9 @@ class BrregClient:
                     }
                     self._snapshots[url] = snapshot
                     if orgnr:
-                        self._org_snapshots.setdefault(orgnr, []).append(snapshot)
+                        existing = self._org_snapshots.setdefault(orgnr, [])
+                        if not any(s.get("content_hash") == content_hash and s.get("url") == url for s in existing):
+                            existing.append(snapshot)
 
                     log_request_event(
                         orgnr=orgnr,
@@ -232,8 +234,22 @@ class BrregClient:
                         attempt=attempt,
                         error=error_message,
                     )
+                    if attempt < max_retries:
+                        # Respect Retry-After header if present, else exponential backoff
+                        retry_after = response.headers.get("Retry-After")
+                        if retry_after:
+                            try:
+                                sleep_time = float(retry_after)
+                            except ValueError:
+                                sleep_time = backoff_factor * (2 ** (attempt - 1))
+                        else:
+                            sleep_time = backoff_factor * (2 ** (attempt - 1))
+                        # Cap at 10s per retry to stay within time budget
+                        sleep_time = min(sleep_time, 10.0)
+                        await asyncio.sleep(sleep_time)
+                        continue
                     raise RateLimitedError(
-                        f"Rate limited by Brreg while querying {endpoint_name} for orgnr {orgnr}",
+                        f"Rate limited by Brreg while querying {endpoint_name} for orgnr {orgnr} after {max_retries} attempts",
                         status_code=429,
                         orgnr=orgnr,
                     )
@@ -359,6 +375,40 @@ class BrregClient:
         if isinstance(result, list):
             return result
         elif isinstance(result, dict):
-            # In case an API wrapper object is returned
-            return [result]
+            # Handle HAL _embedded wrapper: {"_embedded": {"regnskaper": [...]}}
+            embedded = result.get("_embedded")
+            if isinstance(embedded, dict):
+                for key in ("regnskaper", "regnskapList", "items"):
+                    if key in embedded and isinstance(embedded[key], list):
+                        return embedded[key]
+            # Handle "data" or "items" wrapper patterns
+            for key in ("data", "items", "regnskaper"):
+                if key in result and isinstance(result[key], list):
+                    return result[key]
+            # Single filing wrapped in dict
+            if "regnskapsperiode" in result:
+                return [result]
+            return []
         return []
+
+    async def fetch_roller(self, orgnr: str) -> dict[str, Any] | None:
+        """Fetch leadership, board, and auditor roles from Enhetsregisteret Roller API.
+
+        Gracefully returns None on 404 (e.g. entities without registered roles) or if unavailable.
+        """
+        cleaned_orgnr = sanitize_orgnr(orgnr)
+        if not validate_orgnr(cleaned_orgnr):
+            raise InvalidOrgnrError(f"Invalid organisation number: {orgnr}")
+
+        url = f"{self.settings.brreg_enhet_base_url}/{cleaned_orgnr}/roller"
+        try:
+            result = await self._request_with_retry(
+                url=url,
+                orgnr=cleaned_orgnr,
+                endpoint_name="roller",
+            )
+            return result if isinstance(result, dict) else None
+        except NotFoundError:
+            return None
+        except Exception:
+            return None

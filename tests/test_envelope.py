@@ -192,3 +192,41 @@ def test_read_organisation_inputs() -> None:
         jsonl_path = Path(tmpdir) / "orgs.jsonl"
         jsonl_path.write_text('{"organisation_number": "923609016"}\n{"organisation_number": "984851006"}\n', encoding="utf-8")
         assert read_organisation_inputs(jsonl_path) == ["923609016", "984851006"]
+
+
+def test_build_terminal_envelope_blocked_website_and_claims_as_of() -> None:
+    """Test claim as_of date population and module state for blocked website."""
+    from datetime import date
+    orgnr = "923609016"
+    now = datetime.now(timezone.utc)
+    profile = CompanyProfile(
+        orgnr=orgnr,
+        facts=[
+            CompanyFact(
+                field_name="revenue",
+                value=50000000.0,
+                unit="NOK",
+                as_of=date(2024, 12, 31),
+                source_name="Brønnøysundregistrene – Regnskapsregisteret",
+                source_url=f"https://data.brreg.no/regnskapsregisteret/regnskap/{orgnr}",
+                confidence="official",
+            ),
+        ],
+        source_statuses={"website": "blocked"},
+    )
+
+    envelope = build_terminal_envelope(
+        orgnr=orgnr,
+        run_id="test-run-blocked-web",
+        started_at=now,
+        completed_at=now,
+        profile=profile,
+    )
+
+    validate_test_envelope(envelope)
+    assert envelope["modules"]["website"]["state"] == "blocked_robots"
+    claim = envelope["claims"][0]
+    assert claim["field"] == "revenue"
+    assert claim["as_of"] == "2024-12-31"
+    assert claim["unit"] == "NOK"
+

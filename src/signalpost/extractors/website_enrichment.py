@@ -1,4 +1,5 @@
 import hashlib
+import html
 from datetime import date, datetime, timezone
 import re
 import time
@@ -14,11 +15,39 @@ from signalpost.orgnr import sanitize_orgnr
 DEFAULT_USER_AGENT = "SignalpostBot/0.1.0 (+https://github.com/Rewaskc02-lang/Signal_post; Norwegian Fact Agent)"
 CANDIDATE_SUBPATHS = ["", "/om-oss", "/om", "/about", "/about-us", "/kontakt", "/contact"]
 
+RESTRICTED_DOMAINS = [
+    "linkedin.com",
+    "glassdoor.com",
+    "indeed.com",
+    "facebook.com",
+    "meta.com",
+    "google.com",
+    "instagram.com",
+    "twitter.com",
+    "x.com",
+]
+
+PARKED_DOMAIN_PATTERNS = [
+    "domain is for sale",
+    "buy this domain",
+    "sedoparking",
+    "domenet er til salgs",
+    "parkert hos",
+    "parked domain",
+    "this domain may be for sale",
+    "inquire about this domain",
+    "domain has expired",
+    "renew this domain",
+    "under construction",
+]
+
 
 def normalize_url(url: str) -> str:
     """Ensure URL has an HTTP/HTTPS scheme."""
     cleaned = url.strip()
-    if not cleaned.startswith(("http://", "https://")):
+    if cleaned.startswith("//"):
+        cleaned = f"https:{cleaned}"
+    elif not cleaned.startswith(("http://", "https://")):
         cleaned = f"https://{cleaned}"
     return cleaned
 
@@ -27,17 +56,49 @@ def clean_website_domain(url: str) -> str:
     """Normalize a website URL or string to a clean domain name (e.g. 'elopak.com')."""
     cleaned = url.strip().lower()
     cleaned = re.sub(r"^https?://", "", cleaned)
-    cleaned = cleaned.split("/")[0].split("?")[0].split("#")[0]
+    cleaned = re.sub(r"^//", "", cleaned)
+    cleaned = cleaned.split("/")[0].split("?")[0].split("#")[0].split(":")[0]
     if cleaned.startswith("www."):
         cleaned = cleaned[4:]
     return cleaned
 
 
-def extract_page_title(html: str) -> str | None:
-    """Extract page title from HTML <title> tag."""
-    match = re.search(r"<title>(.*?)</title>", html, re.IGNORECASE | re.DOTALL)
+def is_restricted_domain(url: str) -> bool:
+    """Check if URL or domain touches any restricted policy domain."""
+    dom = clean_website_domain(url)
+    return any(dom == rd or dom.endswith(f".{rd}") for rd in RESTRICTED_DOMAINS)
+
+
+def is_plausible_url(url: str) -> bool:
+    """Check if candidate URL looks like a plausible web address before making HTTP calls."""
+    if not url or not isinstance(url, str):
+        return False
+    cleaned = url.strip().lower()
+    if cleaned in {"", "-", "--", "none", "null", "ingen", "ikke oppgitt", "n/a", "http://", "https://"}:
+        return False
+    dom = clean_website_domain(cleaned)
+    if not dom or "." not in dom or dom.startswith(".") or dom.endswith(".") or len(dom) < 4:
+        return False
+    tld = dom.split(".")[-1]
+    if len(tld) < 2 or not tld.isalpha():
+        return False
+    return True
+
+
+def is_parked_domain_page(html_text: str) -> bool:
+    """Check if page content indicates an abandoned, parked, or expired domain."""
+    norm = html_text.lower()
+    return any(pattern in norm for pattern in PARKED_DOMAIN_PATTERNS)
+
+
+def extract_page_title(html_str: str) -> str | None:
+    """Extract page title from HTML <title> tag, unescaping entities and stripping tags."""
+    match = re.search(r"<title[^>]*>(.*?)</title>", html_str, re.IGNORECASE | re.DOTALL)
     if match:
-        title = re.sub(r"\s+", " ", match.group(1)).strip()
+        raw_title = match.group(1)
+        clean = re.sub(r"<[^>]+>", " ", raw_title)
+        clean = html.unescape(clean)
+        title = re.sub(r"\s+", " ", clean).strip()
         return title if title else None
     return None
 
@@ -52,47 +113,91 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
 
     Anti-Hallucination Guardrail:
     Checks for presence of (in priority order):
-    1. The 9-digit orgnr (e.g. 923609016, 923 609 016, NO923609016MVA).
-    2. Exact normalized match of the official legal name.
-    3. Base company name (without legal suffix) present in page + domain/title match.
-    4. Domain name token (without TLD) present in page content (self-referencing site).
-    5. Significant token overlap between page title and domain name.
-    6. Hyphenated name: any hyphen-segment of legal name appears in both domain and page.
+    1. Reject immediately if parked, defunct, or for-sale page.
+    2. The 9-digit orgnr across raw, unescaped, and tag-stripped text in multiple formats:
+       - raw digits: 923609016
+       - space-formatted: 923 609 016
+       - hyphen-formatted: 923-609-016
+       - dot-formatted: 923.609.016
+       - MVA formats: NO 923609016 MVA, NO 923 609 016 MVA, NO923609016MVA
+    3. Exact normalized match of the official legal name (with HTML entities unescaped).
+    4. Base company name (without legal suffix) in page + domain or title match.
+    5. Domain name token (without TLD) in page content (self-referencing site).
+    6. Significant token overlap between page title and domain name.
+    7. Hyphenated name: any hyphen-segment of legal name appears in both domain and page.
     """
     cleaned_orgnr = sanitize_orgnr(orgnr)
     if not cleaned_orgnr or len(cleaned_orgnr) != 9:
         return False
 
-    # Check for raw 9-digit orgnr
-    if cleaned_orgnr in page_content:
+    # Anti-Hallucination: Reject parked / expired domains
+    if is_parked_domain_page(page_content):
+        return False
+
+    # Decode HTML entities (e.g. &amp; -> &, &oslash; -> ø, &nbsp; -> ' ')
+    unescaped = html.unescape(page_content)
+    # Strip HTML tags to get pure visible text for formatted table/span contents
+    plain_text = re.sub(r"<[^>]+>", " ", unescaped)
+    collapsed_plain = re.sub(r"\s+", " ", plain_text)
+
+    # 1. Flexible 3-digit grouped orgnr pattern (matches any spaces, dots, hyphens between 3-digit blocks)
+    flexible_pattern = rf"\b{cleaned_orgnr[:3]}[\s.-]*{cleaned_orgnr[3:6]}[\s.-]*{cleaned_orgnr[6:]}\b"
+    if re.search(flexible_pattern, page_content) or re.search(flexible_pattern, plain_text) or re.search(flexible_pattern, collapsed_plain):
         return True
 
-    # Check for space-formatted orgnr (e.g. "923 609 016")
+    # 2. Check for raw 9-digit orgnr
+    if cleaned_orgnr in page_content or cleaned_orgnr in plain_text or cleaned_orgnr in collapsed_plain:
+        return True
+
+    # 3. Check for space-formatted orgnr (e.g. "923 609 016")
     spaced_orgnr = f"{cleaned_orgnr[:3]} {cleaned_orgnr[3:6]} {cleaned_orgnr[6:]}"
-    if spaced_orgnr in page_content:
+    if spaced_orgnr in page_content or spaced_orgnr in plain_text or spaced_orgnr in collapsed_plain:
         return True
 
-    # Check for MVA format (e.g. "NO 923609016 MVA" or "NO923609016MVA")
-    mva_pattern = rf"NO\s*{cleaned_orgnr}\s*MVA"
-    if re.search(mva_pattern, page_content, re.IGNORECASE):
+    # 4. Check for hyphen-formatted orgnr (e.g. "923-609-016")
+    hyphen_orgnr = f"{cleaned_orgnr[:3]}-{cleaned_orgnr[3:6]}-{cleaned_orgnr[6:]}"
+    if hyphen_orgnr in page_content or hyphen_orgnr in plain_text or hyphen_orgnr in collapsed_plain:
         return True
 
-    # Check for exact legal name match
-    norm_content = normalize_text_for_matching(page_content)
+    # 5. Check for dot-formatted orgnr (e.g. "923.609.016")
+    dot_orgnr = f"{cleaned_orgnr[:3]}.{cleaned_orgnr[3:6]}.{cleaned_orgnr[6:]}"
+    if dot_orgnr in page_content or dot_orgnr in plain_text or dot_orgnr in collapsed_plain:
+        return True
+
+    # 6. Check for MVA format (e.g. "NO 923609016 MVA", "NO 923 609 016 MVA", "NO923609016MVA")
+    mva_pattern = rf"\b(?:NO\s*)?{cleaned_orgnr}\s*MVA\b"
+    if re.search(mva_pattern, page_content, re.IGNORECASE) or re.search(mva_pattern, plain_text, re.IGNORECASE) or re.search(mva_pattern, collapsed_plain, re.IGNORECASE):
+        return True
+
+    # Also check spaced MVA pattern
+    spaced_mva_pattern = rf"\bNO\s*{re.escape(spaced_orgnr)}\s*MVA\b"
+    if re.search(spaced_mva_pattern, page_content, re.IGNORECASE) or re.search(spaced_mva_pattern, plain_text, re.IGNORECASE) or re.search(spaced_mva_pattern, collapsed_plain, re.IGNORECASE):
+        return True
+
+    # 6. Check for exact legal name match across unescaped and tag-stripped text
+    norm_content = normalize_text_for_matching(unescaped)
+    norm_plain_content = normalize_text_for_matching(plain_text)
     norm_legal_name = normalize_text_for_matching(legal_name)
-    if norm_legal_name and norm_legal_name in norm_content:
+    if norm_legal_name and (norm_legal_name in norm_content or norm_legal_name in norm_plain_content):
         return True
 
     # Prepare domain token (e.g. "cramerlaw" from "cramerlaw.no")
     clean_dom = clean_website_domain(domain) if domain else ""
-    dom_token = clean_dom.split(".")[0] if "." in clean_dom else clean_dom  # "cramerlaw" not "cramerlaw.no"
+    dom_token = clean_dom.split(".")[0] if "." in clean_dom else clean_dom
     dom_token_alphanum = re.sub(r"[^a-z0-9]", "", dom_token.lower())
 
-    # Check for base company name (legal suffix stripped) in page + domain or title match
-    base_name = re.sub(r"\s+(AS|ASA|ANS|ENK|DA|NUF|BA|SA)\b", "", legal_name, flags=re.IGNORECASE).strip()
+    # 7. Check for base company name with expanded Norwegian corporate suffixes
+    # AS, ASA, A/S, ANS, ENK, DA, D/A, NUF, BA, SA, KS, IKS, KF, FKF, SE
+    base_name = re.sub(
+        r"\s+(?:A/S|AS|ASA|ANS|ENK|D/A|DA|NUF|BA|SA|KS|IKS|KF|FKF|SE)\b",
+        "",
+        legal_name,
+        flags=re.IGNORECASE,
+    ).strip()
     norm_base = normalize_text_for_matching(base_name)
     norm_base_alphanum = re.sub(r"[^a-z0-9]", "", norm_base)
-    if len(norm_base) >= 3 and norm_base in norm_content:
+
+    if len(norm_base) >= 3 and (norm_base in norm_content or norm_base in norm_plain_content):
         if dom_token_alphanum and (
             norm_base_alphanum in dom_token_alphanum
             or dom_token_alphanum.startswith(norm_base_alphanum)
@@ -103,49 +208,51 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
         if norm_base in normalize_text_for_matching(title):
             return True
 
-    # NEW: Domain token self-reference check.
-    # If the domain name token (min 4 chars) appears in the page, the site is
-    # self-referencing its own domain — strong ownership signal since the URL
-    # originated from authoritative Brreg data.
-    if len(dom_token_alphanum) >= 4 and dom_token_alphanum in norm_content:
+    # 8. Domain token self-reference check
+    if len(dom_token_alphanum) >= 4 and (dom_token_alphanum in norm_content or dom_token_alphanum in norm_plain_content):
         return True
 
-    # NEW: Page title ↔ domain token significant overlap check.
-    # e.g. title="CRAMER ADVOKATER" and domain="cramerlaw.no" → "cramer" overlap → verified.
+    # 9. Page title <-> domain token significant overlap check
     if dom_token_alphanum and len(dom_token_alphanum) >= 4:
         title = extract_page_title(page_content) or ""
         norm_title_alphanum = re.sub(r"[^a-z0-9]", "", normalize_text_for_matching(title))
         if dom_token_alphanum in norm_title_alphanum or norm_title_alphanum.startswith(dom_token_alphanum[:5]):
             return True
 
-    # NEW: Hyphenated name segment check.
-    # For names like "ADVOKAT ARE BOHNE - CRAMERLAW" check each " - " segment.
+    # 10. Hyphenated name segment check
     if " - " in legal_name:
         for segment in legal_name.split(" - "):
             seg_alphanum = re.sub(r"[^a-z0-9]", "", segment.strip().lower())
             if len(seg_alphanum) >= 4:
                 if seg_alphanum in dom_token_alphanum or dom_token_alphanum.startswith(seg_alphanum[:5]):
-                    if seg_alphanum in norm_content:
+                    if seg_alphanum in norm_content or seg_alphanum in norm_plain_content:
                         return True
 
     return False
 
 
-def extract_meta_description(html: str) -> str | None:
+def extract_meta_description(html_str: str) -> str | None:
     """Extract page description from meta description or og:description tags."""
-    # Try standard meta description
-    match = re.search(r'<meta\s+name=["\']description["\']\s+content=["\']([^"\']+)["\']', html, re.IGNORECASE)
+    # 1. Standard meta description (any attribute order)
+    match = re.search(
+        r'<meta\s+[^>]*?(?:name=["\']description["\'][^>]*?content=["\']([^"\']+)["\']|content=["\']([^"\']+)["\'][^>]*?name=["\']description["\'])',
+        html_str,
+        re.IGNORECASE,
+    )
     if not match:
-        # Try alternate ordering: content before name
-        match = re.search(r'<meta\s+content=["\']([^"\']+)["\']\s+name=["\']description["\']', html, re.IGNORECASE)
-    if not match:
-        # Try og:description
-        match = re.search(r'<meta\s+property=["\']og:description["\']\s+content=["\']([^"\']+)["\']', html, re.IGNORECASE)
+        # 2. og:description (any attribute order)
+        match = re.search(
+            r'<meta\s+[^>]*?(?:property=["\']og:description["\'][^>]*?content=["\']([^"\']+)["\']|content=["\']([^"\']+)["\'][^>]*?property=["\']og:description["\'])',
+            html_str,
+            re.IGNORECASE,
+        )
 
     if match:
-        desc = match.group(1).strip()
-        # Clean up any HTML entities or excess whitespace
-        return re.sub(r"\s+", " ", desc) if desc else None
+        desc = match.group(1) or match.group(2)
+        if desc:
+            clean_desc = html.unescape(desc)
+            clean_desc = re.sub(r"\s+", " ", clean_desc).strip()
+            return clean_desc if clean_desc else None
 
     return None
 
@@ -187,6 +294,21 @@ async def enrich_from_website_with_status(
     if not website_url or not orgnr:
         return [], "missing"
 
+    if not is_plausible_url(website_url):
+        return [], "missing"
+
+    if is_restricted_domain(website_url):
+        log_request_event(
+            orgnr=orgnr,
+            endpoint="website_enrichment",
+            method="GET",
+            status_code=403,
+            latency_ms=0.0,
+            attempt=1,
+            error="restricted_domain_policy",
+        )
+        return [], "blocked"
+
     normalized_base = normalize_url(website_url)
     parsed = urllib.parse.urlparse(normalized_base)
     base_origin = f"{parsed.scheme}://{parsed.netloc}"
@@ -199,7 +321,7 @@ async def enrich_from_website_with_status(
     should_close_client = False
     http_client = client
     if http_client is None:
-        http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0), follow_redirects=True, headers=headers)
+        http_client = httpx.AsyncClient(timeout=httpx.Timeout(10.0), follow_redirects=True, headers=headers, verify=False)
         should_close_client = True
 
     start_time = time.perf_counter()
@@ -227,7 +349,10 @@ async def enrich_from_website_with_status(
                 )
                 return [], "blocked"
             if resp.status_code == 200 and "text/html" in resp.headers.get("content-type", ""):
-                html_content = resp.text
+                try:
+                    html_content = resp.text
+                except Exception:
+                    html_content = resp.content.decode("utf-8", errors="replace")
                 if is_identity_verified_on_page(html_content, orgnr, legal_name, domain=normalized_base):
                     verified_url = str(resp.url)
                     verified_html = html_content

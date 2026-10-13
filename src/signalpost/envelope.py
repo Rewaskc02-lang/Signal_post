@@ -83,10 +83,18 @@ def build_terminal_envelope(
             for f in profile.facts
         )
         has_website = any(f.field_name == "website" or "website" in f.source_name.lower() for f in profile.facts)
+        web_src_status = (profile.source_statuses or {}).get("website", "")
 
         modules["registry"]["state"] = "complete"
         modules["financials"]["state"] = "complete" if has_financials else "not_applicable"
-        modules["website"]["state"] = "complete" if has_website else "not_applicable"
+        if has_website:
+            modules["website"]["state"] = "complete"
+        elif web_src_status in ("blocked", "blocked_robots"):
+            modules["website"]["state"] = "blocked_robots"
+        elif web_src_status == "blocked_policy":
+            modules["website"]["state"] = "blocked_policy"
+        else:
+            modules["website"]["state"] = "not_applicable"
 
         evidence_by_url: dict[str, str] = {}
         for fact in profile.facts:
@@ -105,13 +113,14 @@ def build_terminal_envelope(
                     s_class = "public_source"
 
                 content_hash = fact.content_hash or hashlib.sha256(str(fact.value).encode()).hexdigest()
+                unit_suffix = f" {fact.unit}" if fact.unit else ""
                 evidence_list.append({
                     "id": ev_id,
                     "source_url": source_url,
                     "source_class": s_class,
                     "retrieved_at": utc_iso(fact.retrieved_at),
                     "content_sha256": content_hash,
-                    "claim_span": f"{fact.field_name}: {fact.value}",
+                    "claim_span": f"{fact.field_name}: {fact.value}{unit_suffix}",
                 })
             else:
                 ev_id = evidence_by_url[source_url]
@@ -124,7 +133,7 @@ def build_terminal_envelope(
             elif fact.confidence == "unverified_secondary":
                 conf = 0.7
 
-            claims.append({
+            claim_entry: dict[str, Any] = {
                 "field": fact.field_name,
                 "value": fact.value,
                 "source_url": source_url,
@@ -133,7 +142,12 @@ def build_terminal_envelope(
                 "availability": "available",
                 "confidence": conf,
                 "evidence_ids": [ev_id],
-            })
+            }
+            if fact.unit:
+                claim_entry["unit"] = fact.unit
+            if fact.as_of:
+                claim_entry["as_of"] = fact.as_of.isoformat() if hasattr(fact.as_of, "isoformat") else str(fact.as_of)
+            claims.append(claim_entry)
 
         if diff_summary:
             for item in diff_summary.changes:
@@ -151,6 +165,10 @@ def build_terminal_envelope(
             err_str = str(error or "").lower()
             if "404" in err_str or "not found" in err_str:
                 status = "not_found"
+            elif "robot" in err_str:
+                status = "blocked_robots"
+            elif "policy" in err_str or "403" in err_str or "forbidden" in err_str:
+                status = "blocked_policy"
             elif "checksum" in err_str or "invalid" in err_str or "format" in err_str:
                 status = "submission_error"
             elif "budget" in err_str or "exhausted" in err_str:

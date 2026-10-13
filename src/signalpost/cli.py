@@ -115,27 +115,80 @@ class RunReport(BaseModel):
 
 
 def read_organisation_inputs(path: str | Path) -> list[str]:
-    """Read organisation numbers from .txt, .json, or .jsonl files."""
+    """Read organisation numbers from .txt, .csv, .json, or .jsonl files."""
     source = Path(path)
     if not source.exists():
         raise FileNotFoundError(f"Input file '{path}' not found.")
-    text = source.read_text(encoding="utf-8")
-    values: list[Any]
-    if source.suffix == ".json":
+    text = source.read_text(encoding="utf-8-sig")
+    values: list[Any] = []
+    suffix = source.suffix.lower()
+
+    if suffix == ".json":
         body = json.loads(text)
-        values = body if isinstance(body, list) else body.get("organisation_numbers", [])
-    elif source.suffix == ".jsonl":
-        values = [json.loads(line) for line in text.splitlines() if line.strip()]
+        if isinstance(body, list):
+            values = body
+        elif isinstance(body, dict):
+            for k in (
+                "organisation_numbers",
+                "organisations",
+                "companies",
+                "orgnrs",
+                "orgs",
+                "items",
+                "data",
+                "records",
+                "entities",
+                "results",
+                "inputs",
+                "payload",
+            ):
+                if k in body and isinstance(body[k], list):
+                    values = body[k]
+                    break
+            else:
+                values = list(body.values())
+    elif suffix == ".jsonl":
+        for line in text.splitlines():
+            line_str = line.strip()
+            if line_str and not line_str.startswith("#"):
+                try:
+                    values.append(json.loads(line_str))
+                except Exception:
+                    values.append(line_str)
     else:
-        values = [line.strip() for line in text.splitlines() if line.strip() and not line.strip().startswith("#")]
+        for line in text.splitlines():
+            line_str = line.strip()
+            if not line_str or line_str.startswith("#"):
+                continue
+            delimiter = ";" if ";" in line_str else ("," if "," in line_str else None)
+            if delimiter:
+                for part in line_str.split(delimiter):
+                    if part.strip():
+                        values.append(part.strip())
+            else:
+                values.append(line_str)
+
+    # Flatten nested lists if any
+    flat_values: list[Any] = []
+    for v in values:
+        if isinstance(v, list):
+            flat_values.extend(v)
+        else:
+            flat_values.append(v)
 
     orgnrs = []
-    for value in values:
+    for value in flat_values:
         if isinstance(value, dict):
-            org = value.get("organisation_number") or value.get("orgnr") or ""
+            org = (
+                value.get("organisation_number")
+                or value.get("orgnr")
+                or value.get("org_number")
+                or value.get("id")
+                or ""
+            )
         else:
             org = str(value)
-        org_str = str(org).strip()
+        org_str = str(org).strip().strip('"').strip("'").strip("`")
         if org_str:
             orgnrs.append(org_str)
     return orgnrs
@@ -241,6 +294,7 @@ async def process_single_orgnr(
             )
 
             tokens_in, tokens_out, cost = 0, 0, 0.0
+            summary_res = None
             if enable_summary:
                 summary_res = await generate_company_summary(
                     profile=updated_profile,
@@ -267,7 +321,7 @@ async def process_single_orgnr(
                 output_dir.mkdir(parents=True, exist_ok=True)
                 profile_path = output_dir / f"{cleaned_orgnr}.json"
                 profile_dict = updated_profile.model_dump(mode="json")
-                if enable_summary and "summary_res" in locals():
+                if summary_res is not None:
                     profile_dict["executive_summary"] = summary_res.summary_text
                 with open(profile_path, "w", encoding="utf-8") as f:
                     json.dump(profile_dict, f, indent=2, ensure_ascii=False)
@@ -425,11 +479,24 @@ async def run_pipeline(
         await brreg_client.close()
         storage.close()
 
-    # Collect envelopes in original input order
+    # Collect envelopes in original input order (guarantee zero silent drops)
     envelopes = []
-    for res in results:
+    for idx, res in enumerate(results):
         if isinstance(res, tuple) and len(res) == 3 and res[2] is not None:
             envelopes.append(res[2])
+        elif isinstance(res, Exception):
+            failed_org = orgnrs[idx] if idx < len(orgnrs) else "unknown"
+            fallback_envelope = build_terminal_envelope(
+                orgnr=failed_org,
+                run_id=run_id,
+                started_at=datetime.now(timezone.utc),
+                completed_at=datetime.now(timezone.utc),
+                error=f"Worker exception: {res}",
+                terminal_state="source_error",
+            )
+            envelopes.append(fallback_envelope)
+            sys.stdout.write(json.dumps(fallback_envelope, ensure_ascii=False) + "\n")
+            sys.stdout.flush()
 
     # Write envelopes to file targets
     target_files: list[Path] = []

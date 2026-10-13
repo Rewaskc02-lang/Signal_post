@@ -1,5 +1,6 @@
 """Natural language explanation generation and token-monitored company summarizer."""
 
+import asyncio
 from datetime import date, datetime
 import json
 import os
@@ -136,6 +137,18 @@ def generate_fact_note(fact: CompanyFact) -> str:
         year_str = str(as_of.year) if isinstance(as_of, (date, datetime)) else "reported period"
         formatted_val = f"{val:,.0f}" if isinstance(val, (int, float)) else str(val)
         return f"Total recorded debt and liabilities as of fiscal year end {year_str}: {formatted_val} {unit}."
+
+    if field == "ceo":
+        return f"Official registered Chief Executive Officer (Daglig leder): {val}."
+
+    if field == "board_chair":
+        return f"Official registered Board Chair (Styrets leder): {val}."
+
+    if field == "auditor":
+        return f"Official registered statutory auditor (Revisor): {val}."
+
+    if field == "accountant":
+        return f"Official registered authorized accountant / accounting firm: {val}."
 
     # Generic fallback
     return f"Verified fact from {fact.source_name} ({fact.confidence})."
@@ -276,119 +289,162 @@ async def generate_company_summary(
 
     system_prompt, user_prompt = build_llm_prompt(profile)
 
-    # Attempt LLM call via OpenRouter / Gemini / OpenAI
-    try:
-        should_close_client = False
-        http_client = client
-        if http_client is None:
-            http_client = httpx.AsyncClient(timeout=httpx.Timeout(15.0))
-            should_close_client = True
+    # Attempt LLM call with retry logic (exponential backoff for transient failures)
+    max_llm_retries = 3
+    llm_backoff_factor = 1.0
 
-        try:
-            # 1. OpenRouter Provider
-            if selected_provider == "openrouter":
-                url = "https://openrouter.ai/api/v1/chat/completions"
-                headers = {
-                    "Authorization": f"Bearer {llm_key}",
-                    "HTTP-Referer": "https://github.com/Rewaskc02-lang/Signal_post",
-                    "X-Title": "Signalpost",
-                }
-                payload = {
-                    "model": target_model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "temperature": 0.2,
-                    "max_tokens": 250,
-                }
-                resp = await http_client.post(url, json=payload, headers=headers)
-                if resp.status_code == 200:
-                    data = resp.json()
+    should_close_client = False
+    http_client = client
+    if http_client is None:
+        http_client = httpx.AsyncClient(timeout=httpx.Timeout(20.0), follow_redirects=True)
+        should_close_client = True
+
+    try:
+        for llm_attempt in range(1, max_llm_retries + 1):
+            try:
+                resp = None
+
+                # 1. OpenRouter Provider
+                if selected_provider == "openrouter":
+                    url = "https://openrouter.ai/api/v1/chat/completions"
+                    headers = {
+                        "Authorization": f"Bearer {llm_key}",
+                        "HTTP-Referer": "https://github.com/Rewaskc02-lang/Signal_post",
+                        "X-Title": "Signalpost",
+                    }
+                    payload = {
+                        "model": target_model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        "temperature": 0.2,
+                        "max_tokens": 250,
+                    }
+                    resp = await http_client.post(url, json=payload, headers=headers)
+
+                # 2. Google Generative Language API (Gemini direct)
+                elif selected_provider == "gemini":
+                    clean_gemini_model = target_model.replace("google/", "").replace("models/", "")
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_gemini_model}:generateContent?key={llm_key}"
+                    payload = {
+                        "contents": [
+                            {"role": "user", "parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}
+                        ],
+                        "generationConfig": {"temperature": 0.2, "maxOutputTokens": 250},
+                    }
+                    resp = await http_client.post(url, json=payload)
+
+                # 3. OpenAI Direct API
+                elif selected_provider == "openai":
+                    url = "https://api.openai.com/v1/chat/completions"
+                    headers = {"Authorization": f"Bearer {llm_key}"}
+                    payload = {
+                        "model": target_model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": user_prompt},
+                        ],
+                        "temperature": 0.2,
+                        "max_tokens": 250,
+                    }
+                    resp = await http_client.post(url, json=payload, headers=headers)
+
+                if resp is None:
+                    break  # Unknown provider, fall through to deterministic
+
+                # Retryable status codes: 429 (rate limit), 500-599 (server errors)
+                if resp.status_code in (429, 500, 502, 503, 529):
+                    if llm_attempt < max_llm_retries:
+                        retry_after = resp.headers.get("Retry-After")
+                        if retry_after:
+                            try:
+                                sleep_time = min(float(retry_after), 10.0)
+                            except ValueError:
+                                sleep_time = llm_backoff_factor * (2 ** (llm_attempt - 1))
+                        else:
+                            sleep_time = llm_backoff_factor * (2 ** (llm_attempt - 1))
+                        await asyncio.sleep(sleep_time)
+                        continue
+                    break  # Exhausted retries, fall through to deterministic
+
+                if resp.status_code != 200:
+                    break  # Non-retryable error (e.g. 400, 401), fall through
+
+                # Parse successful response
+                data = resp.json()
+                if selected_provider == "openrouter" or selected_provider == "openai":
                     candidate = data["choices"][0]["message"]["content"].strip()
                     usage = data.get("usage", {})
                     p_tokens = usage.get("prompt_tokens", len(user_prompt) // 4)
                     c_tokens = usage.get("completion_tokens", len(candidate) // 4)
-                    cost = estimate_token_cost(p_tokens, c_tokens, target_model)
-                    return CompanySummaryResult(
-                        orgnr=profile.orgnr,
-                        summary_text=candidate,
-                        source_facts_used=used_facts,
-                        prompt_tokens=p_tokens,
-                        completion_tokens=c_tokens,
-                        total_tokens=p_tokens + c_tokens,
-                        estimated_cost_usd=cost,
-                        is_llm_generated=True,
-                    )
-
-            # 2. Google Generative Language API (Gemini direct)
-            elif selected_provider == "gemini":
-                clean_gemini_model = target_model.replace("google/", "").replace("models/", "")
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{clean_gemini_model}:generateContent?key={llm_key}"
-                payload = {
-                    "contents": [
-                        {"role": "user", "parts": [{"text": f"{system_prompt}\n\n{user_prompt}"}]}
-                    ],
-                    "generationConfig": {"temperature": 0.2, "maxOutputTokens": 250},
-                }
-                resp = await http_client.post(url, json=payload)
-                if resp.status_code == 200:
-                    data = resp.json()
+                elif selected_provider == "gemini":
                     candidate = data["candidates"][0]["content"]["parts"][0]["text"].strip()
                     usage = data.get("usageMetadata", {})
                     p_tokens = usage.get("promptTokenCount", len(user_prompt) // 4)
                     c_tokens = usage.get("candidatesTokenCount", len(candidate) // 4)
-                    cost = estimate_token_cost(p_tokens, c_tokens, clean_gemini_model)
-                    return CompanySummaryResult(
-                        orgnr=profile.orgnr,
-                        summary_text=candidate,
-                        source_facts_used=used_facts,
-                        prompt_tokens=p_tokens,
-                        completion_tokens=c_tokens,
-                        total_tokens=p_tokens + c_tokens,
-                        estimated_cost_usd=cost,
-                        is_llm_generated=True,
-                    )
+                else:
+                    break
 
-            # 3. OpenAI Direct API
-            elif selected_provider == "openai":
-                url = "https://api.openai.com/v1/chat/completions"
-                headers = {"Authorization": f"Bearer {llm_key}"}
-                payload = {
-                    "model": target_model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_prompt},
-                    ],
-                    "temperature": 0.2,
-                    "max_tokens": 250,
-                }
-                resp = await http_client.post(url, json=payload, headers=headers)
-                if resp.status_code == 200:
-                    data = resp.json()
-                    candidate = data["choices"][0]["message"]["content"].strip()
-                    usage = data.get("usage", {})
-                    p_tokens = usage.get("prompt_tokens", len(user_prompt) // 4)
-                    c_tokens = usage.get("completion_tokens", len(candidate) // 4)
-                    cost = estimate_token_cost(p_tokens, c_tokens, target_model)
-                    return CompanySummaryResult(
-                        orgnr=profile.orgnr,
-                        summary_text=candidate,
-                        source_facts_used=used_facts,
-                        prompt_tokens=p_tokens,
-                        completion_tokens=c_tokens,
-                        total_tokens=p_tokens + c_tokens,
-                        estimated_cost_usd=cost,
-                        is_llm_generated=True,
-                    )
+                if not candidate:
+                    break
 
-        finally:
-            if should_close_client and not http_client.is_closed:
-                await http_client.aclose()
+                # Anti-Hallucination Numeric Tripwire Gate (Check b conformance)
+                # If the LLM invents any number not present in verified facts,
+                # reject candidate immediately and fall back to the deterministic template.
+                import re
+                facts_text_parts = [profile.orgnr]
+                for fact in profile.facts:
+                    val = fact.value
+                    if val is not None:
+                        facts_text_parts.append(str(val))
+                        if isinstance(val, (int, float)):
+                            facts_text_parts.append(f"{val:,}")
+                            facts_text_parts.append(str(int(val)))
+                    if fact.as_of:
+                        facts_text_parts.append(str(fact.as_of))
+                        facts_text_parts.append(str(fact.as_of)[:4])
+                facts_blob = " ".join(facts_text_parts)
+                digits_in_facts = set(re.findall(r"\d+", facts_blob))
+                numbers_in_summary = re.findall(r"\b\d[\d,.]*\b", candidate)
+                has_hallucinated_number = False
+                for num in numbers_in_summary:
+                    clean_num = re.sub(r"[,.]", "", num)
+                    if clean_num and clean_num not in digits_in_facts:
+                        has_hallucinated_number = True
+                        break
+
+                if has_hallucinated_number:
+                    break
+
+                cost = estimate_token_cost(p_tokens, c_tokens, target_model)
+                return CompanySummaryResult(
+                    orgnr=profile.orgnr,
+                    summary_text=candidate,
+                    source_facts_used=used_facts,
+                    prompt_tokens=p_tokens,
+                    completion_tokens=c_tokens,
+                    total_tokens=p_tokens + c_tokens,
+                    estimated_cost_usd=cost,
+                    is_llm_generated=True,
+                )
+
+            except (httpx.TimeoutException, httpx.TransportError):
+                # Transient network failure — retry if attempts remain
+                if llm_attempt < max_llm_retries:
+                    await asyncio.sleep(llm_backoff_factor * (2 ** (llm_attempt - 1)))
+                    continue
+                break
+            except (KeyError, IndexError, TypeError):
+                # Malformed API response — do not retry, fall through to deterministic
+                break
 
     except Exception:
-        # Graceful degradation on network/API failure
+        # Graceful degradation on any unexpected failure
         pass
+    finally:
+        if should_close_client and not http_client.is_closed:
+            await http_client.aclose()
 
     # Fallback to deterministic summary
     det_summary = generate_deterministic_summary(profile)

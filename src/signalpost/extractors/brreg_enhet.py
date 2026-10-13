@@ -85,21 +85,25 @@ def extract_enhet_facts(
         unit: str | None = None,
         as_of: date | None = None,
     ) -> None:
-        if value is not None:
-            facts.append(
-                CompanyFact(
-                    field_name=field_name,
-                    value=value,
-                    unit=unit,
-                    source_name=SOURCE_NAME_ENHET,
-                    source_url=endpoint_url,
-                    as_of=as_of,
-                    retrieved_at=fetch_time,
-                    confidence="official",
-                    content_hash=hash_digest,
-                    extraction_method="official_api",
-                )
+        # Reject None, empty string, empty dict, empty list — but allow 0 and False
+        if value is None:
+            return
+        if isinstance(value, (str, dict, list)) and not value:
+            return
+        facts.append(
+            CompanyFact(
+                field_name=field_name,
+                value=value,
+                unit=unit,
+                source_name=SOURCE_NAME_ENHET,
+                source_url=endpoint_url,
+                as_of=as_of,
+                retrieved_at=fetch_time,
+                confidence="official",
+                content_hash=hash_digest,
+                extraction_method="official_api",
             )
+        )
 
     # 1. Legal Name
     if navn := raw_data.get("navn"):
