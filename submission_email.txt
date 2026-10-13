@@ -16,7 +16,7 @@ Repository URL:
 https://github.com/Rewaskc02-lang/Signal_post
 
 Exact commit hash:
-71b99e5089a72ef5d4921c792838c2f057e0edd2 (or latest HEAD on main)
+f3223686e7da81b11f8ac41b59a8aae8dad9454d
 
 100-company smoke-test report URL:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/100_company_smoke_test_report.md
