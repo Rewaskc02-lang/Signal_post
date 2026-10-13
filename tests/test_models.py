@@ -20,7 +20,7 @@ def test_company_fact_creation_minimal() -> None:
     assert fact.source_name == "brreg_enhetsregisteret"
     assert fact.source_url == "https://data.brreg.no/enhetsregisteret/api/enheter/923609016"
     assert fact.as_of is None
-    assert fact.confidence_level == 1.0
+    assert fact.confidence_level is None
     assert isinstance(fact.retrieved_at, datetime)
 
 

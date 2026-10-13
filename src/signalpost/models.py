@@ -43,7 +43,7 @@ class CompanyFact(BaseModel):
         description="Confidence label ('official', 'verified_secondary', 'unverified_secondary').",
     )
     confidence_level: float | str | None = Field(
-        default=1.0,
+        default=None,
         description="Numeric confidence score or alias for backwards compatibility.",
     )
 

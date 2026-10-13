@@ -8,10 +8,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -21,10 +21,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -34,10 +34,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -47,10 +47,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": "2015-06-08",
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -60,10 +60,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -73,10 +73,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -94,23 +94,23 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
       "field_name": "employee_count",
-      "value": 56,
+      "value": 58,
       "unit": "count",
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -120,10 +120,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     },
     {
@@ -133,19 +133,19 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/915495486",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:42.715838Z",
+      "retrieved_at": "2026-10-13T05:31:41.710955Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "a0daa892feeaf9260a055aa7209edabeb45337ae6191cecccfe1e70bd878373d",
+      "confidence_level": null,
+      "content_hash": "0a55a2769be70c6ec641ff368783843a6d1d1976fb849d4a2102a303b4ec067a",
       "extraction_method": "official_api"
     }
   ],
-  "last_checked": "2026-10-05T13:50:42.715914Z",
-  "last_changed": "2026-09-17T14:12:54.958049Z",
+  "last_checked": "2026-10-13T05:31:41.711031Z",
+  "last_changed": "2026-10-13T05:31:41.711031Z",
   "source_statuses": {
     "enhetsregisteret": "available",
     "regnskapsregisteret": "missing",
     "website": "missing"
   },
-  "executive_summary": "WATERCIRCLES FORSIKRING ASA is a Norwegian Allmennaksjeselskap (org. nr. 915495486) currently with 'active' legal status. The company's primary registered activity is skadeforsikring. Latest registry records indicate 56 registered employees."
+  "executive_summary": "WATERCIRCLES FORSIKRING ASA is a Norwegian Allmennaksjeselskap (org. nr. 915495486) currently with 'active' legal status. The company's primary registered activity is skadeforsikring. Latest registry records indicate 58 registered employees."
 }

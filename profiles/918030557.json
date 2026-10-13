@@ -8,10 +8,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -21,10 +21,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -34,10 +34,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -47,10 +47,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": "2016-11-09",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -60,10 +60,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -73,10 +73,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -94,10 +94,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -115,23 +115,23 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
       "field_name": "employee_count",
-      "value": 16,
+      "value": 15,
       "unit": "count",
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -141,10 +141,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -154,10 +154,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/918030557",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "64df0fa4f96cc701a6d0846c460111c3adc1e96d75dd00ce12ac8c486c1b3972",
+      "confidence_level": null,
+      "content_hash": "dd70644114a39a663fcabc1c739e1070910d43b53dde1e082e1b5ded63b843a3",
       "extraction_method": "official_api"
     },
     {
@@ -167,9 +167,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -180,9 +180,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -193,9 +193,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -206,9 +206,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -219,9 +219,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -232,9 +232,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -245,9 +245,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -258,9 +258,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -271,9 +271,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -284,9 +284,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -297,9 +297,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     },
@@ -310,19 +310,19 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/918030557",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:50:34.324382Z",
+      "retrieved_at": "2026-10-13T05:31:33.414245Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "e8a080f601b826d375d44d2aac16611212a0bc27df5bf661e69859511e9bb208",
       "extraction_method": "official_api"
     }
   ],
-  "last_checked": "2026-10-05T13:50:34.324499Z",
-  "last_changed": "2026-10-02T20:53:28.849291Z",
+  "last_checked": "2026-10-13T05:31:33.414381Z",
+  "last_changed": "2026-10-13T05:23:56.915885Z",
   "source_statuses": {
     "enhetsregisteret": "available",
     "regnskapsregisteret": "available",
     "website": "missing"
   },
-  "executive_summary": "FUN PUB TROMSØ AS is a Norwegian Aksjeselskap (org. nr. 918030557) currently with 'active' legal status. The company's primary registered activity is drift av barer. Latest registry records indicate 16 registered employees and revenue of 12,388,508 NOK for fiscal year 2025."
+  "executive_summary": "FUN PUB TROMSØ AS is a Norwegian Aksjeselskap (org. nr. 918030557) currently with 'active' legal status. The company's primary registered activity is drift av barer. Latest registry records indicate 15 registered employees and revenue of 12,388,508 NOK for fiscal year 2025."
 }

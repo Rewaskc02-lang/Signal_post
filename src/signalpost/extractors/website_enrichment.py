@@ -51,11 +51,13 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
     """Verify that a web page actually belongs to the given company.
 
     Anti-Hallucination Guardrail:
-    Checks for presence of:
+    Checks for presence of (in priority order):
     1. The 9-digit orgnr (e.g. 923609016, 923 609 016, NO923609016MVA).
-    2. Or an exact normalized match of the official legal name (e.g. 'Equinor ASA').
-    3. Or normalized match of the base company name (e.g. 'Equinor' from 'Equinor ASA')
-       if the base name appears in the domain or title.
+    2. Exact normalized match of the official legal name.
+    3. Base company name (without legal suffix) present in page + domain/title match.
+    4. Domain name token (without TLD) present in page content (self-referencing site).
+    5. Significant token overlap between page title and domain name.
+    6. Hyphenated name: any hyphen-segment of legal name appears in both domain and page.
     """
     cleaned_orgnr = sanitize_orgnr(orgnr)
     if not cleaned_orgnr or len(cleaned_orgnr) != 9:
@@ -81,18 +83,50 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
     if norm_legal_name and norm_legal_name in norm_content:
         return True
 
-    # Check for company base name when domain or title also matches
+    # Prepare domain token (e.g. "cramerlaw" from "cramerlaw.no")
+    clean_dom = clean_website_domain(domain) if domain else ""
+    dom_token = clean_dom.split(".")[0] if "." in clean_dom else clean_dom  # "cramerlaw" not "cramerlaw.no"
+    dom_token_alphanum = re.sub(r"[^a-z0-9]", "", dom_token.lower())
+
+    # Check for base company name (legal suffix stripped) in page + domain or title match
     base_name = re.sub(r"\s+(AS|ASA|ANS|ENK|DA|NUF|BA|SA)\b", "", legal_name, flags=re.IGNORECASE).strip()
     norm_base = normalize_text_for_matching(base_name)
+    norm_base_alphanum = re.sub(r"[^a-z0-9]", "", norm_base)
     if len(norm_base) >= 3 and norm_base in norm_content:
-        clean_dom = clean_website_domain(domain) if domain else ""
-        norm_dom_alphanum = re.sub(r"[^a-z0-9]", "", clean_dom)
-        norm_base_alphanum = re.sub(r"[^a-z0-9]", "", norm_base)
-        if norm_base_alphanum and (norm_base_alphanum in norm_dom_alphanum or norm_dom_alphanum.startswith(norm_base_alphanum)):
+        if dom_token_alphanum and (
+            norm_base_alphanum in dom_token_alphanum
+            or dom_token_alphanum.startswith(norm_base_alphanum)
+            or norm_base_alphanum.startswith(dom_token_alphanum)
+        ):
             return True
         title = extract_page_title(page_content) or ""
         if norm_base in normalize_text_for_matching(title):
             return True
+
+    # NEW: Domain token self-reference check.
+    # If the domain name token (min 4 chars) appears in the page, the site is
+    # self-referencing its own domain — strong ownership signal since the URL
+    # originated from authoritative Brreg data.
+    if len(dom_token_alphanum) >= 4 and dom_token_alphanum in norm_content:
+        return True
+
+    # NEW: Page title ↔ domain token significant overlap check.
+    # e.g. title="CRAMER ADVOKATER" and domain="cramerlaw.no" → "cramer" overlap → verified.
+    if dom_token_alphanum and len(dom_token_alphanum) >= 4:
+        title = extract_page_title(page_content) or ""
+        norm_title_alphanum = re.sub(r"[^a-z0-9]", "", normalize_text_for_matching(title))
+        if dom_token_alphanum in norm_title_alphanum or norm_title_alphanum.startswith(dom_token_alphanum[:5]):
+            return True
+
+    # NEW: Hyphenated name segment check.
+    # For names like "ADVOKAT ARE BOHNE - CRAMERLAW" check each " - " segment.
+    if " - " in legal_name:
+        for segment in legal_name.split(" - "):
+            seg_alphanum = re.sub(r"[^a-z0-9]", "", segment.strip().lower())
+            if len(seg_alphanum) >= 4:
+                if seg_alphanum in dom_token_alphanum or dom_token_alphanum.startswith(seg_alphanum[:5]):
+                    if seg_alphanum in norm_content:
+                        return True
 
     return False
 
@@ -257,7 +291,6 @@ async def enrich_from_website_with_status(
                     as_of=None,
                     retrieved_at=fetch_time,
                     confidence="verified_secondary",
-                    confidence_level=1.0,
                     content_hash=content_hash,
                     extraction_method="http_verification",
                 )

@@ -8,10 +8,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -21,10 +21,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -34,10 +34,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -47,10 +47,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": "2007-12-03",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -60,10 +60,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -73,10 +73,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -94,23 +94,23 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
       "field_name": "employee_count",
-      "value": 21,
+      "value": 22,
       "unit": "count",
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -120,10 +120,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -133,10 +133,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -146,10 +146,10 @@
       "source_name": "Brønnøysundregistrene – Enhetsregisteret",
       "source_url": "https://data.brreg.no/enhetsregisteret/api/enheter/991559124",
       "as_of": null,
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
-      "content_hash": "e12c94131c3ae969418ed6e8c7b2ee126f3c118234a7aaf921cfa2d1751ec6eb",
+      "confidence_level": null,
+      "content_hash": "baf3723c56b5894fe5b0adcb3b961797001fddf9711e4f7eea4a8e9face7a319",
       "extraction_method": "official_api"
     },
     {
@@ -159,9 +159,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -172,9 +172,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -185,9 +185,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -198,9 +198,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2023-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -211,9 +211,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -224,9 +224,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -237,9 +237,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -250,9 +250,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2024-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -263,9 +263,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -276,9 +276,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -289,9 +289,9 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     },
@@ -302,19 +302,19 @@
       "source_name": "Brønnøysundregistrene – Regnskapsregisteret",
       "source_url": "https://data.brreg.no/regnskapsregisteret/regnskap/991559124",
       "as_of": "2025-12-31",
-      "retrieved_at": "2026-10-05T13:51:05.289423Z",
+      "retrieved_at": "2026-10-13T05:32:03.742718Z",
       "confidence": "official",
-      "confidence_level": 1.0,
+      "confidence_level": null,
       "content_hash": "857cf91fa0221229fbc19766ba637b1ecae1dad79dd015e39a322f855d8a1a7b",
       "extraction_method": "official_api"
     }
   ],
-  "last_checked": "2026-10-05T13:51:05.289504Z",
-  "last_changed": "2026-10-02T20:56:06.552180Z",
+  "last_checked": "2026-10-13T05:32:03.742783Z",
+  "last_changed": "2026-10-13T05:32:03.742783Z",
   "source_statuses": {
     "enhetsregisteret": "available",
     "regnskapsregisteret": "available",
     "website": "missing"
   },
-  "executive_summary": "ASPÅSEN BARNEHAGE SA is a Norwegian Samvirkeforetak (org. nr. 991559124) currently with 'active' legal status. The company's primary registered activity is førskoleundervisning og drift av barnehager. Latest registry records indicate 21 registered employees and revenue of 7,210,466 NOK for fiscal year 2025."
+  "executive_summary": "ASPÅSEN BARNEHAGE SA is a Norwegian Samvirkeforetak (org. nr. 991559124) currently with 'active' legal status. The company's primary registered activity is førskoleundervisning og drift av barnehager. Latest registry records indicate 22 registered employees and revenue of 7,210,466 NOK for fiscal year 2025."
 }
