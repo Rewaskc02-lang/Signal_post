@@ -2,7 +2,7 @@
 
 ## Repository Information
 - **Repository URL**: `https://github.com/Rewaskc02-lang/Signal_post`
-- **Commit Hash**: `b32a5a45b34cfb4f759a3d8768a1bdd54dee9c0b` (or latest HEAD on `main`)
+- **Commit Hash**: `dbd5e1d8f8b3e3093de96f13586ee9003d1c63cb` (or latest HEAD on `main`)
 - **Language & Runtime**: Python 3.11+
 
 ---
@@ -30,7 +30,7 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 - **Comprehensive Sections**:
   - `organisation_number`: 9-digit stable identity key.
   - `run`: `{"run_id": ..., "started_at": ..., "completed_at": ..., "terminal_status": ...}`.
-  - `claims`: Fact claims with exact `availability`, `source_url`, `retrieved_at`, and `supporting_value` for every claim, plus confidence scores and evidence IDs.
+  - `claims`: 35+ fact claims per company (34,850 claims across the 1,000-company evaluation set) with exact `availability`, `source_url`, `retrieved_at`, and `supporting_value` for every claim, plus confidence scores and evidence IDs.
   - `evidence`: Cryptographic sha256 content hashes, exact source URLs (e.g. `https://www.elopak.com/`), source classes, and retrieval timestamps.
   - `source_snapshots`: Raw HTTP response snapshots (URL, status_code, content_type, full response_body, and raw content sha256) enabling instant offline claim verification. Includes both Brreg API JSON bodies and live company website HTML pages.
   - `modules`: State tracking for `registry`, `financials`, and `website`.
@@ -42,8 +42,8 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 
 ## Model & API Details
 - **Primary Data Registry**: Brønnøysundregistrene (Brreg) official REST APIs
-  - `Enhetsregisteret`: `https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}` (core corporate data)
-  - `Regnskapsregisteret`: `https://data.brreg.no/regnskapsregisteret/regnskap/{orgnr}` (filed annual accounts)
+  - `Enhetsregisteret`: `https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}` (core corporate data: name, org form, addresses, employees, foundation date, capital, accounting year, sector, business purpose)
+  - `Regnskapsregisteret`: `https://data.brreg.no/regnskapsregisteret/regnskap/{orgnr}` (filed annual accounts: revenue, operating result, pre-tax ordinary result, net annual income, equity, total assets, total debt)
   - `Bulk Export`: `https://data.brreg.no/enhetsregisteret/api/enheter/lastned` (active entity sampling)
   - *Authentication*: Free, public, no API key required.
 - **Natural Language Summary Model**:
@@ -57,12 +57,12 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 
 | Scope | Ingestion Requests | Wall-Clock Time | Registry Cost (Brreg) | LLM Summary Cost | Total Run Cost |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **100 Companies (Daily Grading Run)** | ~210 requests | **~5.6s** | **$0.00** (Free API) | **$0.000** *(or $0.024 with LLM)* | **$0.00 USD** *(or $0.024 USD)* |
-| **1,000 Companies (Observed Batch Run)** | **2,112 requests** | **56.23s** | **$0.00** (Free API) | **$0.000** *(or $0.241 with LLM)* | **$0.00 USD** *(or $0.241 USD)* |
+| **100 Companies (Daily Grading Run)** | ~210 requests | **~5.1s** | **$0.00** (Free API) | **$0.000** *(or $0.024 with LLM)* | **$0.00 USD** *(or $0.024 USD)* |
+| **1,000 Companies (Observed Batch Run)** | **2,112 requests** | **50.59s** | **$0.00** (Free API) | **$0.000** *(or $0.241 with LLM)* | **$0.00 USD** *(or $0.241 USD)* |
 
 - **Strict Challenge Budget Compliance**:
   - Request Limit: 2,112 requests for 1,000 companies (well within 5,000 cap).
-  - Time Limit: 56.23s total execution time (well under 2,400s cap).
+  - Time Limit: 50.59s total execution time (well under 2,400s cap).
   - Total Declared Cost: **$0.00 USD** (deterministic) / **$0.24 USD** (with LLM), far below the $10.00 cap.
 
 ---
