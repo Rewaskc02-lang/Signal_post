@@ -100,6 +100,7 @@ class BrregClient:
                 timeout=httpx.Timeout(self.settings.brreg_request_timeout_seconds),
                 limits=limits,
                 headers={"Accept": "application/json", "User-Agent": "Signalpost/0.1.0"},
+                follow_redirects=True,
             )
 
     async def __aenter__(self) -> "BrregClient":

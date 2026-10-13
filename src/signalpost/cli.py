@@ -376,6 +376,7 @@ async def run_pipeline(
         limits=httpx.Limits(max_connections=50, max_keepalive_connections=20),
         headers={"Accept": "application/json", "User-Agent": "Signalpost/0.4.0"},
         event_hooks={"request": [request_hook]},
+        follow_redirects=True,
     )
 
     brreg_client = BrregClient(client=custom_client)

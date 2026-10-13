@@ -214,7 +214,7 @@ async def enrich_from_website_with_status(
         # Robots.txt is checked inline: if server returns 403/401 we mark blocked.
         # Subpath traversal is intentionally skipped to stay within request budget.
         try:
-            resp = await http_client.get(normalized_base)
+            resp = await http_client.get(normalized_base, follow_redirects=True)
             if resp.status_code in (401, 403):
                 log_request_event(
                     orgnr=orgnr,
