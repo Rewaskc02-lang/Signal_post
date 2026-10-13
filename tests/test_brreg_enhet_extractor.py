@@ -147,3 +147,39 @@ def test_format_address() -> None:
     assert formatted["street"] == "Gate 1, Bygg B"
     assert formatted["postal_code"] == "0123"
     assert formatted["city"] == "OSLO"
+
+
+def test_extract_enhet_extended_fields() -> None:
+    raw_data = {
+        "organisasjonsnummer": "811413682",
+        "navn": "ELOPAK ASA",
+        "stiftelsesdato": "1957-02-11",
+        "kapital": {
+            "belop": 376906619.6,
+            "valuta": "NOK",
+            "antallAksjer": 269219014,
+        },
+        "sisteInnsendteAarsregnskap": "2025",
+        "institusjonellSektorkode": {
+            "beskrivelse": "Private aksjeselskaper mv.",
+            "kode": "2100",
+        },
+        "vedtektsfestetFormaal": [
+            "Produksjon og salg av emballasje,",
+            "samt deltagelse i andre selskaper."
+        ],
+        "epostadresse": "info@elopak.com",
+    }
+
+    facts = extract_enhet_facts(raw_data, endpoint_url=ENDPOINT)
+    facts_by_field = {f.field_name: f for f in facts}
+
+    assert facts_by_field["foundation_date"].value == "1957-02-11"
+    assert facts_by_field["foundation_date"].as_of == date(1957, 2, 11)
+    assert facts_by_field["share_capital"].value == 376906619.6
+    assert facts_by_field["share_capital"].unit == "NOK"
+    assert facts_by_field["latest_accounting_year"].value == "2025"
+    assert facts_by_field["sector_description"].value == "Private aksjeselskaper mv."
+    assert facts_by_field["sector_code"].value == "2100"
+    assert "Produksjon og salg av emballasje" in facts_by_field["business_purpose"].value
+    assert facts_by_field["email"].value == "info@elopak.com"

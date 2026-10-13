@@ -97,3 +97,39 @@ def test_extract_regnskap_facts_no_fabrication_on_missing_fields() -> None:
 def test_extract_regnskap_empty_or_malformed() -> None:
     assert extract_regnskap_facts([], endpoint_url=ENDPOINT) == []
     assert extract_regnskap_facts([{"missing_periode": True}], endpoint_url=ENDPOINT) == []
+
+
+def test_extract_regnskap_extended_fields() -> None:
+    filings = [
+        {
+            "id": 301,
+            "regnskapsperiode": {"fraDato": "2024-01-01", "tilDato": "2024-12-31"},
+            "valuta": "NOK",
+            "resultatregnskapResultat": {
+                "ordinaertResultatFoerSkattekostnad": 5000000.0,
+                "aarsresultat": 3800000.0,
+                "driftsresultat": {
+                    "driftsresultat": 6000000.0,
+                    "driftsinntekter": {"sumDriftsinntekter": 50000000.0},
+                },
+            },
+            "eiendeler": {
+                "sumEiendeler": 75000000.0,
+            },
+            "egenkapitalGjeld": {
+                "egenkapital": {"sumEgenkapital": 20000000.0},
+                "gjeldOversikt": {"sumGjeld": 55000000.0},
+            },
+        }
+    ]
+
+    facts = extract_regnskap_facts(filings, endpoint_url=ENDPOINT)
+    f_map = {f.field_name: f for f in facts}
+
+    assert f_map["revenue"].value == 50000000.0
+    assert f_map["operating_result"].value == 6000000.0
+    assert f_map["ordinary_result_before_tax"].value == 5000000.0
+    assert f_map["equity"].value == 20000000.0
+    assert f_map["annual_net_result"].value == 3800000.0
+    assert f_map["total_assets"].value == 75000000.0
+    assert f_map["total_debt"].value == 55000000.0

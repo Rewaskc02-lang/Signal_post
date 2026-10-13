@@ -147,8 +147,9 @@ def extract_enhet_facts(
     if website := raw_data.get("hjemmeside"):
         add_fact("website", str(website).strip())
 
-    # 9. Email
-    if epost := raw_data.get("epost"):
+    # 9. Email (check both epost and epostadresse)
+    epost = raw_data.get("epost") or raw_data.get("epostadresse")
+    if epost:
         add_fact("email", str(epost).strip())
 
     # 10. Phone
@@ -164,7 +165,45 @@ def extract_enhet_facts(
     status = determine_status(raw_data)
     add_fact("status", status)
 
-    # 13. Labeled Relationship: Parent Unit (Overordnet enhet)
+    # 13. Foundation / Incorporation Date (stiftelsesdato)
+    if stift_str := raw_data.get("stiftelsesdato"):
+        if stift_date := parse_date_safe(stift_str):
+            add_fact("foundation_date", stift_date.isoformat(), as_of=stift_date)
+
+    # 14. Share Capital (kapital)
+    if kapital := raw_data.get("kapital"):
+        if isinstance(kapital, dict):
+            if belop := kapital.get("belop"):
+                try:
+                    cap_val = float(belop)
+                    valuta = kapital.get("valuta", "NOK")
+                    add_fact("share_capital", cap_val, unit=valuta)
+                except (ValueError, TypeError):
+                    pass
+
+    # 15. Latest Accounting Year (sisteInnsendteAarsregnskap)
+    if siste_regnskap := raw_data.get("sisteInnsendteAarsregnskap"):
+        add_fact("latest_accounting_year", str(siste_regnskap).strip())
+
+    # 16. Institutional Sector (institusjonellSektorkode)
+    if sektor := raw_data.get("institusjonellSektorkode"):
+        if isinstance(sektor, dict):
+            if s_desc := sektor.get("beskrivelse"):
+                add_fact("sector_description", str(s_desc).strip())
+            if s_kode := sektor.get("kode"):
+                add_fact("sector_code", str(s_kode).strip())
+
+    # 17. Business Purpose / Activity (vedtektsfestetFormaal / aktivitet)
+    purpose_lines = raw_data.get("vedtektsfestetFormaal") or raw_data.get("aktivitet")
+    if purpose_lines:
+        if isinstance(purpose_lines, list):
+            joined_purpose = " ".join(str(p).strip() for p in purpose_lines if p)
+        else:
+            joined_purpose = str(purpose_lines).strip()
+        if joined_purpose:
+            add_fact("business_purpose", joined_purpose)
+
+    # 18. Labeled Relationship: Parent Unit (Overordnet enhet)
     # Stored as an explicit labeled relationship fact, NOT merged into company facts
     if parent_orgnr := raw_data.get("overordnetEnhet"):
         add_fact("parent_orgnr", str(parent_orgnr).strip())

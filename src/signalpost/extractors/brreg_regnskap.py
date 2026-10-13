@@ -123,4 +123,23 @@ def extract_regnskap_facts(
         equity = egenkapital_section.get("sumEgenkapital")
         add_financial_fact("equity", equity)
 
+        # 5. Annual Net Result (aarsresultat)
+        annual_result = resultat.get("aarsresultat")
+        add_financial_fact("annual_net_result", annual_result)
+
+        # 6. Total Assets (sumEiendeler)
+        eiendeler = filing.get("eiendeler", {})
+        if isinstance(eiendeler, dict):
+            total_assets = eiendeler.get("sumEiendeler")
+            add_financial_fact("total_assets", total_assets)
+
+        # 7. Total Debt / Liabilities (sumGjeld)
+        gjeld_section = egenkapital_gjeld.get("gjeldOversikt", {})
+        total_debt = None
+        if isinstance(gjeld_section, dict):
+            total_debt = gjeld_section.get("sumGjeld")
+        if total_debt is None:
+            total_debt = egenkapital_gjeld.get("sumGjeld")
+        add_financial_fact("total_debt", total_debt)
+
     return facts

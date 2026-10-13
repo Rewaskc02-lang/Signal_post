@@ -102,6 +102,41 @@ def generate_fact_note(fact: CompanyFact) -> str:
     if field == "status":
         return f"Official legal status: {str(val).upper()}."
 
+    if field == "foundation_date":
+        return f"Official incorporation / foundation date in Enhetsregisteret ({val})."
+
+    if field == "share_capital":
+        formatted_val = f"{val:,.0f}" if isinstance(val, (int, float)) else str(val)
+        return f"Registered share capital in Enhetsregisteret: {formatted_val} {unit}."
+
+    if field == "latest_accounting_year":
+        return f"Most recently submitted annual financial statement year: {val}."
+
+    if field == "sector_description":
+        return f"Official institutional sector classification: {val}."
+
+    if field == "sector_code":
+        return f"Institutional sector classification code: {val}."
+
+    if field == "business_purpose":
+        preview = (val[:100] + "...") if isinstance(val, str) and len(val) > 100 else str(val)
+        return f"Official registered business purpose/activity: {preview}"
+
+    if field == "annual_net_result":
+        year_str = str(as_of.year) if isinstance(as_of, (date, datetime)) else "reported period"
+        formatted_val = f"{val:,.0f}" if isinstance(val, (int, float)) else str(val)
+        return f"Annual net profit/loss for fiscal year {year_str}: {formatted_val} {unit}."
+
+    if field == "total_assets":
+        year_str = str(as_of.year) if isinstance(as_of, (date, datetime)) else "reported period"
+        formatted_val = f"{val:,.0f}" if isinstance(val, (int, float)) else str(val)
+        return f"Total balance sheet assets as of fiscal year end {year_str}: {formatted_val} {unit}."
+
+    if field == "total_debt":
+        year_str = str(as_of.year) if isinstance(as_of, (date, datetime)) else "reported period"
+        formatted_val = f"{val:,.0f}" if isinstance(val, (int, float)) else str(val)
+        return f"Total recorded debt and liabilities as of fiscal year end {year_str}: {formatted_val} {unit}."
+
     # Generic fallback
     return f"Verified fact from {fact.source_name} ({fact.confidence})."
 
