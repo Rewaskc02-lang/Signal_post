@@ -36,6 +36,7 @@ htmlcov/
 .env
 *.gz
 *.jsonl
+!reports/*.jsonl
 *.db
 *.sqlite
 data/

@@ -9,6 +9,8 @@ from typing import Any
 import httpx
 
 from signalpost.brreg_client import log_request_event
+from signalpost.extractors.jobs_enrichment import extract_job_facts
+from signalpost.extractors.public_activity import extract_website_public_activity
 from signalpost.models import CompanyFact
 from signalpost.orgnr import sanitize_orgnr
 
@@ -257,6 +259,63 @@ def extract_meta_description(html_str: str) -> str | None:
     return None
 
 
+def extract_contact_email(html_str: str, domain: str = "") -> str | None:
+    """Extract official company contact email from verified HTML content."""
+    # 1. Search mailto links
+    mailto_matches = re.findall(r'href=["\']mailto:([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})["\']', html_str, re.IGNORECASE)
+    cleaned_dom = clean_website_domain(domain) if domain else ""
+    for email in mailto_matches:
+        e_lower = email.lower().strip()
+        if any(ign in e_lower for ign in ("sentry.io", "wixpress", "example.com", "domain.com", "wordpress")):
+            continue
+        if cleaned_dom and cleaned_dom in e_lower:
+            return e_lower
+    if mailto_matches:
+        valid_candidates = [m.lower().strip() for m in mailto_matches if not any(ign in m.lower() for ign in ("sentry.io", "wixpress", "example.com"))]
+        if valid_candidates:
+            return valid_candidates[0]
+
+    # 2. General regex search for post@, kontakt@, info@
+    common_matches = re.findall(r'\b((?:post|kontakt|info|kundeservice|support|mail)@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})\b', html_str, re.IGNORECASE)
+    for email in common_matches:
+        e_lower = email.lower().strip()
+        if cleaned_dom and cleaned_dom in e_lower:
+            return e_lower
+    if common_matches:
+        return common_matches[0].lower().strip()
+    return None
+
+
+def extract_contact_phone(html_str: str) -> str | None:
+    """Extract official contact telephone number from verified HTML content."""
+    # 1. Search tel links
+    tel_matches = re.findall(r'href=["\']tel:([^"\']+)["\']', html_str, re.IGNORECASE)
+    for tel in tel_matches:
+        cleaned_tel = re.sub(r"[^\d+]", "", tel.strip())
+        if len(cleaned_tel) >= 8:
+            return cleaned_tel
+
+    # 2. Norwegian phone regex (+47 XX XX XX XX or 8-digit)
+    phone_match = re.search(r'\b(?:\+47\s*)?[2-9]\d{1}(?:[\s.-]?\d{2}){3}\b', html_str)
+    if phone_match:
+        return re.sub(r"\s+", " ", phone_match.group(0)).strip()
+    return None
+
+
+def extract_investor_url(html_str: str, base_url: str) -> str | None:
+    """Discover company investor relations or annual reports URL."""
+    links = re.findall(r'<a\s+[^>]*?href=["\']([^"\']+)["\'][^>]*>(.*?)</a>', html_str, re.IGNORECASE | re.DOTALL)
+    for href, text in links:
+        href_clean = href.strip()
+        combined = f"{href_clean} {text}".lower()
+        if any(term in combined for term in ("investor", "investors", "investor relations", "årsrapport", "annual report", "finansiell informasjon", "financial reports")):
+            full_url = urllib.parse.urljoin(base_url, href_clean)
+            parsed = urllib.parse.urlparse(full_url)
+            if parsed.scheme in ("http", "https"):
+                return full_url
+    return None
+
+
 async def is_url_allowed_by_robots(base_origin: str, target_url: str, user_agent: str, client: httpx.AsyncClient) -> bool:
     """Check robots.txt permissions before crawling."""
     robots_url = urllib.parse.urljoin(base_origin, "/robots.txt")
@@ -455,6 +514,78 @@ async def enrich_from_website_with_status(
                         extraction_method="html_meta",
                     )
                 )
+
+            # 4. External Claim: Contact email
+            contact_email = extract_contact_email(verified_html, domain=verified_url)
+            if contact_email:
+                facts.append(
+                    CompanyFact(
+                        field_name="contact_email",
+                        value=contact_email,
+                        source_name="Company Website",
+                        source_url=verified_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.9,
+                        content_hash=content_hash,
+                        extraction_method="html_contact_email",
+                    )
+                )
+
+            # 5. External Claim: Contact phone
+            contact_phone = extract_contact_phone(verified_html)
+            if contact_phone:
+                facts.append(
+                    CompanyFact(
+                        field_name="contact_phone",
+                        value=contact_phone,
+                        source_name="Company Website",
+                        source_url=verified_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.85,
+                        content_hash=content_hash,
+                        extraction_method="html_contact_phone",
+                    )
+                )
+
+            # 6. External Claim: Investor / reporting page
+            investor_url = extract_investor_url(verified_html, base_url=verified_url)
+            if investor_url:
+                facts.append(
+                    CompanyFact(
+                        field_name="investor_url",
+                        value=investor_url,
+                        source_name="Company Website",
+                        source_url=verified_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.9,
+                        content_hash=content_hash,
+                        extraction_method="html_investor_link",
+                    )
+                )
+
+            # 7. Jobs & Careers facts from verified company page
+            job_facts = extract_job_facts(
+                page_content=verified_html,
+                page_url=verified_url,
+                retrieved_at=fetch_time,
+                content_hash=content_hash,
+            )
+            facts.extend(job_facts)
+
+            # 8. Public activity & Press facts from verified company page
+            activity_facts = extract_website_public_activity(
+                page_content=verified_html,
+                page_url=verified_url,
+                retrieved_at=fetch_time,
+                content_hash=content_hash,
+            )
+            facts.extend(activity_facts)
 
         return facts, "available"
 

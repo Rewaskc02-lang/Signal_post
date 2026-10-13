@@ -14,6 +14,7 @@ from signalpost.config import Settings, settings as default_settings
 from signalpost.extractors.brreg_enhet import extract_enhet_facts
 from signalpost.extractors.brreg_regnskap import extract_regnskap_facts
 from signalpost.extractors.brreg_roller import extract_roller_facts
+from signalpost.extractors.public_activity import extract_registry_public_activity
 from signalpost.extractors.website_enrichment import (
     enrich_from_website,
     enrich_from_website_with_status,
@@ -158,7 +159,16 @@ async def build_profile(
             )
             all_facts.extend(roller_facts)
 
-        # 4. Optional website enrichment with strict anti-hallucination verification
+        # 4. Extract official registry public activity & lifecycle status
+        registry_activity = extract_registry_public_activity(
+            enhet_data=enhet_data,
+            enhet_url=enhet_url,
+            retrieved_at=fetch_time,
+            content_hash=enhet_hash,
+        )
+        all_facts.extend(registry_activity)
+
+        # 5. Optional website enrichment with strict anti-hallucination verification
         source_statuses: dict[str, str] = {
             "enhetsregisteret": "available",
             "regnskapsregisteret": "available" if regnskap_data else "missing",
@@ -181,8 +191,17 @@ async def build_profile(
                 all_facts.extend(enrichment_facts)
             else:
                 source_statuses["website"] = "missing"
+        else:
+            source_statuses["website"] = "missing"
 
-        # 5. Deduplicate and assemble profile
+        # 6. Status tracking for jobs and public activity
+        has_jobs = any(f.field_name in {"careers_url", "hiring_status", "job_openings_count"} for f in all_facts)
+        has_activity = any(f.field_name in {"latest_news_title", "press_url", "legal_status"} for f in all_facts)
+
+        source_statuses["jobs"] = "available" if has_jobs else ("not_available" if source_statuses.get("website") == "available" else "not_applicable")
+        source_statuses["public_activity"] = "available" if has_activity else "not_available"
+
+        # 7. Deduplicate and assemble profile
         deduped_facts = deduplicate_facts(all_facts)
 
         return CompanyProfile(

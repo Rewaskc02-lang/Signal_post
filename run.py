@@ -26,6 +26,14 @@ except ImportError:
 
 sys.path.insert(0, str(ROOT / "src"))
 
+# Support shorthand syntax: python run.py --view 923609016
+if "--view" in sys.argv:
+    v_idx = sys.argv.index("--view")
+    if v_idx + 1 < len(sys.argv) and not sys.argv[v_idx + 1].startswith("-"):
+        val = sys.argv.pop(v_idx + 1)
+        if "--orgnr" not in sys.argv and "-o" not in sys.argv:
+            sys.argv.extend(["--orgnr", val])
+
 from signalpost.cli import main
 
 if __name__ == "__main__":

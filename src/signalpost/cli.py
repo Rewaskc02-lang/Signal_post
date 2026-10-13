@@ -23,12 +23,13 @@ from signalpost.brreg_client import (
 )
 from signalpost.config import Settings, settings as default_settings
 from signalpost.differ import ProfileUpdateSummary, diff_and_update_profile
-from signalpost.envelope import build_terminal_envelope
+from signalpost.envelope import build_terminal_envelope, validate_envelope
 from signalpost.explain import generate_company_summary, generate_fact_note
 from signalpost.matcher import build_profile
 from signalpost.models import CompanyProfile
 from signalpost.orgnr import sanitize_orgnr, validate_orgnr
 from signalpost.storage import Storage
+from signalpost.viewer import render_terminal_profile
 
 
 class BudgetExhaustedError(Exception):
@@ -243,7 +244,7 @@ async def process_single_orgnr(
             request_count=0,
             runtime_ms=(time.time() - t0) * 1000,
             error="Invalid Norwegian organisation number format or checksum",
-            terminal_state="submission_error",
+            terminal_state="failed",
         )
         sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
         sys.stdout.flush()
@@ -340,7 +341,7 @@ async def process_single_orgnr(
                 request_count=reqs_used,
                 runtime_ms=(time.time() - t0) * 1000,
                 cost_usd=cost,
-                terminal_state="complete",
+                terminal_state="available",
                 snapshots=org_snapshots,
             )
             sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
@@ -363,7 +364,7 @@ async def process_single_orgnr(
                 request_count=reqs_used,
                 runtime_ms=(time.time() - t0) * 1000,
                 error=budget.halt_reason or "Budget exhausted",
-                terminal_state="budget_exhausted",
+                terminal_state="failed",
             )
             sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
             sys.stdout.flush()
@@ -383,7 +384,7 @@ async def process_single_orgnr(
                 request_count=reqs_used,
                 runtime_ms=(time.time() - t0) * 1000,
                 error="Organisasjonsnummer not found in Enhetsregisteret (404)",
-                terminal_state="not_found",
+                terminal_state="not_available",
             )
             sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
             sys.stdout.flush()
@@ -403,7 +404,7 @@ async def process_single_orgnr(
                 request_count=reqs_used,
                 runtime_ms=(time.time() - t0) * 1000,
                 error=str(exc),
-                terminal_state="source_error",
+                terminal_state="failed",
             )
             sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
             sys.stdout.flush()
@@ -492,7 +493,7 @@ async def run_pipeline(
                 started_at=datetime.now(timezone.utc),
                 completed_at=datetime.now(timezone.utc),
                 error=f"Worker exception: {res}",
-                terminal_state="source_error",
+                terminal_state="failed",
             )
             envelopes.append(fallback_envelope)
             sys.stdout.write(json.dumps(fallback_envelope, ensure_ascii=False) + "\n")
@@ -652,6 +653,17 @@ def build_arg_parser() -> argparse.ArgumentParser:
         help="Optional path to write a machine-readable JSON run report.",
     )
     parser.add_argument(
+        "--view",
+        action="store_true",
+        help="Render a human-readable, rich terminal profile view for inspection.",
+    )
+    parser.add_argument(
+        "--html-report",
+        type=str,
+        default=None,
+        help="Optional path to write a visual HTML dashboard report (e.g. 'reports/report.html').",
+    )
+    parser.add_argument(
         "--quiet",
         "-q",
         action="store_true",
@@ -697,6 +709,37 @@ async def async_main() -> int:
         db_path=args.db,
         quiet=args.quiet,
     )
+
+    # If --view was requested for a single company or batch, render readable profile
+    if args.view and output_dir is not None:
+        env_file = (output_dir if str(output_dir).endswith(".jsonl") else output_dir / "envelopes.jsonl")
+        if env_file.exists():
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            env_obj = json.loads(line)
+                            rendered = render_terminal_profile(env_obj)
+                            sys.stderr.write("\n" + rendered + "\n")
+                        except Exception:
+                            pass
+
+    # If --html-report was requested, generate visual dashboard
+    if args.html_report:
+        from scripts.generate_report import generate_html_report
+        env_file = (output_dir if str(output_dir).endswith(".jsonl") else output_dir / "envelopes.jsonl") if output_dir else None
+        if env_file and env_file.exists():
+            envs = []
+            with open(env_file, "r", encoding="utf-8") as f:
+                for line in f:
+                    if line.strip():
+                        try:
+                            envs.append(json.loads(line))
+                        except Exception:
+                            pass
+            generate_html_report(envs, Path(args.html_report))
+            if not args.quiet:
+                sys.stderr.write(f"✓ Visual HTML dashboard generated at: {args.html_report}\n")
 
     if args.json_report:
         report_path = Path(args.json_report)
