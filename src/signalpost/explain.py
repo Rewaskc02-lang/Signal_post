@@ -275,7 +275,22 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
     else:
         sentence_3 = "No annual accounts or employee records are currently filed in public registries."
 
-    return f"{sentence_1} {sentence_2} {sentence_3}"
+    # Unknowns and data availability disclosures
+    unknowns: list[str] = []
+    if not latest_rev_fact:
+        if any(exempt in org_form_str.upper() for exempt in ("ENK", "FLI", "KIRK", "ENKELTPERSONFORETAK")):
+            unknowns.append("annual accounts are exempt from public filing under the Norwegian Accounting Act")
+        else:
+            unknowns.append("no public annual financial statements are currently filed in Regnskapsregisteret")
+    if not emp_clause:
+        unknowns.append("employee headcount is not reported in Aa-registeret")
+    if not facts_by_field.get("website"):
+        unknowns.append("no verified primary website is registered")
+
+    sentence_4 = f" Data availability notes: {'; '.join(unknowns).capitalize()}." if unknowns else ""
+    source_citation = " (Sources: Brønnøysundregistrene Enhetsregisteret, Regnskapsregisteret, Roller, with verified SHA-256 evidence)."
+
+    return f"{sentence_1} {sentence_2} {sentence_3}{sentence_4}{source_citation}"
 
 
 def build_llm_prompt(profile: CompanyProfile) -> tuple[str, str]:

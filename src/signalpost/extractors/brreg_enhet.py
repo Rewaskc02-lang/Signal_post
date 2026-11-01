@@ -131,13 +131,43 @@ def extract_enhet_facts(
             if desc := nace.get("beskrivelse"):
                 add_fact("nace_description", str(desc).strip())
 
-    # 5. Business Address
+    if nace2 := raw_data.get("naeringskode2"):
+        if isinstance(nace2, dict):
+            if code2 := nace2.get("kode"):
+                add_fact("secondary_nace_code", str(code2).strip())
+            if desc2 := nace2.get("beskrivelse"):
+                add_fact("secondary_nace_description", str(desc2).strip())
+
+    if nace3 := raw_data.get("naeringskode3"):
+        if isinstance(nace3, dict):
+            if code3 := nace3.get("kode"):
+                add_fact("tertiary_nace_code", str(code3).strip())
+            if desc3 := nace3.get("beskrivelse"):
+                add_fact("tertiary_nace_description", str(desc3).strip())
+
+    # 5. Business Address & Atomic Address Fields
     if b_addr := format_address(raw_data.get("forretningsadresse")):
         add_fact("business_address", b_addr)
+        if city := b_addr.get("city"):
+            add_fact("city", str(city).strip())
+        if p_code := b_addr.get("postal_code"):
+            add_fact("postal_code", str(p_code).strip())
+        if mun := b_addr.get("municipality"):
+            add_fact("municipality", str(mun).strip())
+        if mun_code := b_addr.get("municipality_code"):
+            add_fact("municipality_code", str(mun_code).strip())
+        if street := b_addr.get("street"):
+            add_fact("street_address", str(street).strip())
 
     # 6. Postal Address
     if p_addr := format_address(raw_data.get("postadresse")):
         add_fact("postal_address", p_addr)
+        # If city or postal_code wasn't available from business address, fallback to postal address
+        if not b_addr:
+            if p_city := p_addr.get("city"):
+                add_fact("city", str(p_city).strip())
+            if p_pcode := p_addr.get("postal_code"):
+                add_fact("postal_code", str(p_pcode).strip())
 
     # 7. Employee Count
     if (ansatte := raw_data.get("antallAnsatte")) is not None:
@@ -211,5 +241,30 @@ def extract_enhet_facts(
     # Stored as an explicit labeled relationship fact, NOT merged into company facts
     if parent_orgnr := raw_data.get("overordnetEnhet"):
         add_fact("parent_orgnr", str(parent_orgnr).strip())
+
+    # 19. Additional Registry Flags & Registrations
+    if "registrertIForetaksregisteret" in raw_data and raw_data["registrertIForetaksregisteret"] is not None:
+        add_fact("foretaksregister_registered", bool(raw_data["registrertIForetaksregisteret"]))
+
+    if ft_date_str := raw_data.get("registreringsdatoForetaksregisteret"):
+        if ft_date := parse_date_safe(ft_date_str):
+            add_fact("foretaksregister_registration_date", ft_date.isoformat(), as_of=ft_date)
+
+    if mva_date_str := raw_data.get("registreringsdatoMerverdiavgiftsregisteret"):
+        if mva_date := parse_date_safe(mva_date_str):
+            add_fact("mva_registration_date", mva_date.isoformat(), as_of=mva_date)
+
+    if "registrertIFrivillighetsregisteret" in raw_data and raw_data["registrertIFrivillighetsregisteret"] is not None:
+        add_fact("frivillighetsregister_registered", bool(raw_data["registrertIFrivillighetsregisteret"]))
+
+    if "registrertIStiftelsesregisteret" in raw_data and raw_data["registrertIStiftelsesregisteret"] is not None:
+        add_fact("stiftelsesregister_registered", bool(raw_data["registrertIStiftelsesregisteret"]))
+
+    if slettedato_str := raw_data.get("slettedato"):
+        if slett_date := parse_date_safe(slettedato_str):
+            add_fact("dissolution_date", slett_date.isoformat(), as_of=slett_date)
+
+    if lang := raw_data.get("maalform"):
+        add_fact("language", str(lang).strip())
 
     return facts

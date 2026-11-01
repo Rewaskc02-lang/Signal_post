@@ -278,3 +278,64 @@ def test_generated_html_uses_actual_field_names(tmp_path: Path):
     assert "Aksjeselskap" in content
     assert "42" in content
     assert ("1 250 000" in content or "1,250,000" in content)
+
+
+def test_atomic_address_and_expanded_financial_facts():
+    """Verify that atomic address fields and additional financial items are extracted properly."""
+    raw_enhet = {
+        "navn": "Test Corporate AS",
+        "forretningsadresse": {
+            "poststed": "TRONDHEIM",
+            "postnummer": "7010",
+            "kommune": "TRONDHEIM",
+            "kommunenummer": "5001",
+            "adresse": ["Munkegata 1"],
+        },
+        "naeringskode1": {"kode": "62.010", "beskrivelse": "Programmeringstjenester"},
+        "naeringskode2": {"kode": "62.020", "beskrivelse": "Konsulentvirksomhet"},
+        "registrertIForetaksregisteret": True,
+        "maalform": "Bokmål",
+    }
+    facts = extract_enhet_facts(raw_enhet, "https://api.test/enhet/123")
+    f_map = {f.field_name: f.value for f in facts}
+
+    assert f_map.get("city") == "TRONDHEIM"
+    assert f_map.get("postal_code") == "7010"
+    assert f_map.get("municipality") == "TRONDHEIM"
+    assert f_map.get("street_address") == "Munkegata 1"
+    assert f_map.get("secondary_nace_code") == "62.020"
+    assert f_map.get("foretaksregister_registered") is True
+    assert f_map.get("language") == "Bokmål"
+
+
+def test_envelope_synthesis_summary_propagation():
+    """Verify that executive summary propagates to top-level summary, synthesis, and claims."""
+    facts = [
+        CompanyFact(
+            field_name="legal_name",
+            value="Synthesized AS",
+            source_name="Enhetsregisteret",
+            source_url="https://api.test/enhet",
+        )
+    ]
+    summary_text = "Synthesized AS is a verified Norwegian entity with full test coverage."
+    profile = CompanyProfile(orgnr="987654321", facts=facts, executive_summary=summary_text)
+
+    envelope = build_terminal_envelope(
+        orgnr="987654321",
+        run_id="run-synth",
+        started_at=datetime.now(timezone.utc),
+        completed_at=datetime.now(timezone.utc),
+        profile=profile,
+    )
+
+    validate_envelope(envelope)
+    assert envelope["summary"] == summary_text
+    assert envelope["synthesis"] == summary_text
+    assert envelope["profile"]["executive_summary"] == summary_text
+
+    synth_claim = next((c for c in envelope["claims"] if c.get("field") == "executive_summary"), None)
+    assert synth_claim is not None
+    assert synth_claim["value"] == summary_text
+    assert synth_claim["availability"] == "available"
+

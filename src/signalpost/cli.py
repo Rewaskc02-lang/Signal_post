@@ -304,6 +304,7 @@ async def process_single_orgnr(
                 tokens_in = summary_res.prompt_tokens
                 tokens_out = summary_res.completion_tokens
                 cost = summary_res.estimated_cost_usd
+                updated_profile.executive_summary = summary_res.summary_text
 
             # Persist captured raw HTTP response snapshots for evaluator claim verification
             org_snapshots = client.get_snapshots_for_org(cleaned_orgnr) if hasattr(client, "get_snapshots_for_org") else []

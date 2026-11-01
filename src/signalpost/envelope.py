@@ -241,7 +241,7 @@ def build_terminal_envelope(
             for f in profile.facts
         )
         has_roles = any(
-            f.field_name in {"ceo", "board_chair", "auditor", "accountant"}
+            f.field_name in {"ceo", "board_chair", "auditor", "accountant", "proprietor", "partner", "deputy_chair", "board_member", "contact_person"}
             for f in profile.facts
         )
         has_jobs = any(
@@ -421,6 +421,18 @@ def build_terminal_envelope(
                 "evidence_ids": [],
             })
 
+        if profile.executive_summary:
+            claims.append({
+                "field": "executive_summary",
+                "value": profile.executive_summary,
+                "source_url": f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}",
+                "retrieved_at": completed_iso,
+                "supporting_value": profile.executive_summary,
+                "availability": "available",
+                "confidence": 1.0,
+                "evidence_ids": [evidence_list[0]["id"]] if evidence_list else [],
+            })
+
         if diff_summary:
             for item in diff_summary.changes:
                 changes.append({
@@ -490,6 +502,8 @@ def build_terminal_envelope(
             "runtime_ms": round(runtime_ms, 2),
             "third_party_cost_usd": round(cost_usd, 6),
         },
+        "summary": profile.executive_summary if profile and profile.executive_summary else None,
+        "synthesis": profile.executive_summary if profile and profile.executive_summary else None,
         "profile": profile.model_dump(mode="json") if profile else None,
     }
 

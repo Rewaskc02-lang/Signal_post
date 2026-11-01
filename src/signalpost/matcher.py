@@ -49,7 +49,10 @@ def deduplicate_facts(facts: list[CompanyFact]) -> list[CompanyFact]:
 
     fact_map: dict[tuple[str, Any], CompanyFact] = {}
     for fact in facts:
-        key = (fact.field_name, fact.as_of)
+        if fact.field_name in {"board_member", "deputy_board_member"}:
+            key = (fact.field_name, str(fact.value).strip().lower())
+        else:
+            key = (fact.field_name, fact.as_of)
         existing = fact_map.get(key)
         if existing is None:
             fact_map[key] = fact

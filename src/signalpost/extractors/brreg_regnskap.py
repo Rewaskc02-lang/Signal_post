@@ -132,14 +132,51 @@ def extract_regnskap_facts(
         if isinstance(eiendeler, dict):
             total_assets = eiendeler.get("sumEiendeler")
             add_financial_fact("total_assets", total_assets)
+            omloep = eiendeler.get("omloepsmidler", {})
+            if isinstance(omloep, dict):
+                add_financial_fact("current_assets", omloep.get("sumOmloepsmidler"))
+            anlegg = eiendeler.get("anleggsmidler", {})
+            if isinstance(anlegg, dict):
+                add_financial_fact("fixed_assets", anlegg.get("sumAnleggsmidler"))
 
-        # 7. Total Debt / Liabilities (sumGjeld)
+        # 7. Total Debt / Liabilities (sumGjeld) and breakdown
         gjeld_section = egenkapital_gjeld.get("gjeldOversikt", {})
         total_debt = None
         if isinstance(gjeld_section, dict):
             total_debt = gjeld_section.get("sumGjeld")
+            kortsiktig = gjeld_section.get("kortsiktigGjeld", {})
+            if isinstance(kortsiktig, dict):
+                add_financial_fact("short_term_debt", kortsiktig.get("sumKortsiktigGjeld"))
+            langsiktig = gjeld_section.get("langsiktigGjeld", {})
+            if isinstance(langsiktig, dict):
+                add_financial_fact("long_term_debt", langsiktig.get("sumLangsiktigGjeld"))
         if total_debt is None:
             total_debt = egenkapital_gjeld.get("sumGjeld")
         add_financial_fact("total_debt", total_debt)
+
+        # 8. Operating Expenses (driftskostnad)
+        driftskostnad = driftsresultat_section.get("driftskostnad", {})
+        if not isinstance(driftskostnad, dict):
+            driftskostnad = resultat.get("driftskostnad", {})
+        if isinstance(driftskostnad, dict):
+            add_financial_fact("operating_expenses", driftskostnad.get("sumDriftskostnad"))
+            add_financial_fact("salaries_and_wages", driftskostnad.get("loennskostnad"))
+            add_financial_fact("depreciation", driftskostnad.get("avskrivningPaaVarigeDriftsmidlerOgImmaterielleEiendeler"))
+
+        # 9. Financial Items & Taxes
+        finans = resultat.get("finansinntektOgFinanskostnad", {})
+        if isinstance(finans, dict):
+            fin_inn = finans.get("finansinntekt", {})
+            if isinstance(fin_inn, dict):
+                add_financial_fact("financial_income", fin_inn.get("sumFinansinntekter"))
+            fin_kost = finans.get("finanskostnad", {})
+            if isinstance(fin_kost, dict):
+                add_financial_fact("financial_expenses", fin_kost.get("sumFinanskostnader"))
+            add_financial_fact("net_financial_items", finans.get("nettoFinans"))
+
+        tax_exp = resultat.get("skattekostnadPaOrdinaertResultat")
+        if tax_exp is None:
+            tax_exp = resultat.get("skattekostnad")
+        add_financial_fact("tax_expense", tax_exp)
 
     return facts

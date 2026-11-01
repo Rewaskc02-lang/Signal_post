@@ -88,17 +88,34 @@ def extract_roller_facts(
             if not name:
                 continue
 
-            if "daglig leder" in r_desc.lower() and "ceo" not in extracted_keys:
+            r_lower = r_desc.lower()
+            if "daglig leder" in r_lower and "ceo" not in extracted_keys:
                 add_fact("ceo", name)
                 extracted_keys.add("ceo")
-            elif "leder" in r_desc.lower() and "styre" in r_desc.lower() and "board_chair" not in extracted_keys:
+            elif "nestleder" in r_lower and "deputy_chair" not in extracted_keys:
+                add_fact("deputy_chair", name)
+                extracted_keys.add("deputy_chair")
+            elif "leder" in r_lower and "styre" in r_lower and "board_chair" not in extracted_keys:
                 add_fact("board_chair", name)
                 extracted_keys.add("board_chair")
-            elif "revisor" in r_desc.lower() and "auditor" not in extracted_keys:
+            elif "revisor" in r_lower and "auditor" not in extracted_keys:
                 add_fact("auditor", name)
                 extracted_keys.add("auditor")
-            elif "regnskapsfører" in r_desc.lower() and "accountant" not in extracted_keys:
+            elif "regnskapsfører" in r_lower and "accountant" not in extracted_keys:
                 add_fact("accountant", name)
                 extracted_keys.add("accountant")
+            elif ("innehaver" in r_lower or "eier" in r_lower) and "proprietor" not in extracted_keys:
+                add_fact("proprietor", name)
+                extracted_keys.add("proprietor")
+            elif "deltaker" in r_lower and "partner" not in extracted_keys:
+                add_fact("partner", name)
+                extracted_keys.add("partner")
+            elif "kontaktperson" in r_lower and "contact_person" not in extracted_keys:
+                add_fact("contact_person", name)
+                extracted_keys.add("contact_person")
+            elif "styremedlem" in r_lower:
+                add_fact("board_member", name)
+            elif "varamedlem" in r_lower:
+                add_fact("deputy_board_member", name)
 
     return facts
