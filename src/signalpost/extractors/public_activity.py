@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 import hashlib
 import html
 import re
@@ -82,7 +82,13 @@ def extract_website_public_activity(
         re.IGNORECASE | re.DOTALL,
     )
     if not article_blocks:
-        article_blocks = [page_content]
+        # Require strong evidence: only inspect blocks containing both a heading and a valid date
+        dated_blocks = re.findall(
+            r'<(?:div|li|article|section)[^>]*?>.*?<h[2-4][^>]*>.*?</h[2-4]>.*?<time[^>]*datetime=["\']\d{4}-\d{2}-\d{2}[^"\']*["\'].*?</(?:div|li|article|section)>',
+            page_content,
+            re.IGNORECASE | re.DOTALL,
+        )
+        article_blocks = dated_blocks
 
     seen_headlines: set[str] = set()
     found_first_date: str | None = None

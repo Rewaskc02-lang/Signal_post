@@ -47,10 +47,14 @@ def deduplicate_facts(facts: list[CompanyFact]) -> list[CompanyFact]:
         "unverified_secondary": 1,
     }
 
-    fact_map: dict[tuple[str, Any], CompanyFact] = {}
+    fact_map: dict[tuple[Any, ...], CompanyFact] = {}
     for fact in facts:
         if fact.field_name in {"board_member", "deputy_board_member"}:
             key = (fact.field_name, str(fact.value).strip().lower())
+        elif fact.field_name == "job_title":
+            key = (fact.field_name, str(fact.value).strip().lower(), fact.source_url or "", fact.as_of)
+        elif fact.field_name in {"latest_news_title", "news_title", "press_release"}:
+            key = (fact.field_name, str(fact.value).strip().lower(), fact.as_of)
         else:
             key = (fact.field_name, fact.as_of)
         existing = fact_map.get(key)

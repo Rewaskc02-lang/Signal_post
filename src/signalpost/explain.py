@@ -177,9 +177,12 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
 
     nace_desc = facts_by_field.get("nace_description", [None])[0]
     status_fact = facts_by_field.get("status", [None])[0]
-    status_str = str(status_fact.value) if status_fact and status_fact.value else "active"
+    status_str = str(status_fact.value) if status_fact and status_fact.value else "Not reported"
 
-    sentence_1 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) currently with '{status_str}' legal status."
+    if status_str != "Not reported":
+        sentence_1 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) currently with '{status_str}' legal status."
+    else:
+        sentence_1 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) with no legal status reported in public registries."
 
     if nace_desc and nace_desc.value:
         sentence_2 = f"The company's primary registered activity is {str(nace_desc.value).lower()}."
@@ -288,7 +291,12 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
         unknowns.append("no verified primary website is registered")
 
     sentence_4 = f" Data availability notes: {'; '.join(unknowns).capitalize()}." if unknowns else ""
-    source_citation = " (Sources: Brønnøysundregistrene Enhetsregisteret, Regnskapsregisteret, Roller, with verified SHA-256 evidence)."
+
+    # Trace actual sources used to avoid false blanket citations
+    actual_sources: list[str] = ["Enhetsregisteret"]
+    if latest_rev_fact is not None:
+        actual_sources.append("Regnskapsregisteret")
+    source_citation = f" (Sources: Brønnøysundregistrene {', '.join(actual_sources)}, with verified SHA-256 evidence)."
 
     return f"{sentence_1} {sentence_2} {sentence_3}{sentence_4}{source_citation}"
 

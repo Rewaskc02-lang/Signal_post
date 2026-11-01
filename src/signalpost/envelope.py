@@ -422,15 +422,45 @@ def build_terminal_envelope(
             })
 
         if profile.executive_summary:
+            summary_ev_ids: list[str] = []
+            # Facts from Enhetsregisteret used in summary
+            enhet_facts = [
+                f for f in profile.facts
+                if f.field_name in {"legal_name", "org_form_description", "org_form_code", "nace_description", "status", "employee_count"}
+            ]
+            for f in enhet_facts:
+                s_url = f.source_url or f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}"
+                ev_id = evidence_by_url.get(s_url)
+                if ev_id and ev_id not in summary_ev_ids:
+                    summary_ev_ids.append(ev_id)
+
+            # Facts from Regnskapsregisteret if revenue/financials mentioned in summary
+            if any(term in profile.executive_summary for term in ("revenue", "fiscal year", "NOK", "USD", "EUR", "accounts")):
+                fin_facts = [f for f in profile.facts if f.field_name in {"revenue", "latest_accounting_year"}]
+                for f in fin_facts:
+                    s_url = f.source_url or f"https://data.brreg.no/regnskapsregisteret/regnskap/{orgnr}"
+                    ev_id = evidence_by_url.get(s_url)
+                    if ev_id and ev_id not in summary_ev_ids:
+                        summary_ev_ids.append(ev_id)
+
+            if not summary_ev_ids and evidence_list:
+                summary_ev_ids = [evidence_list[0]["id"]]
+
+            summary_source_url = f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}"
+            if len(summary_ev_ids) > 1:
+                regnskap_urls = [ev["source_url"] for ev in evidence_list if "regnskap" in ev["source_url"].lower()]
+                if regnskap_urls:
+                    summary_source_url = f"{summary_source_url} ; {regnskap_urls[0]}"
+
             claims.append({
                 "field": "executive_summary",
                 "value": profile.executive_summary,
-                "source_url": f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}",
+                "source_url": summary_source_url,
                 "retrieved_at": completed_iso,
                 "supporting_value": profile.executive_summary,
                 "availability": "available",
                 "confidence": 1.0,
-                "evidence_ids": [evidence_list[0]["id"]] if evidence_list else [],
+                "evidence_ids": summary_ev_ids,
             })
 
         if diff_summary:

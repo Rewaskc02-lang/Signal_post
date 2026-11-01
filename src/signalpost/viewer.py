@@ -1260,7 +1260,9 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
       rows.forEach(r => {{
         htmlStr += `<tr><th>${{escapeHtml(r.label)}}</th>`;
         selectedList.forEach(c => {{
-          htmlStr += `<td>${{escapeHtml(String(c[r.key] || 'N/A'))}}</td>`;
+          const rawVal = c[r.key];
+          const displayVal = (rawVal !== null && rawVal !== undefined && rawVal !== '') ? rawVal : 'N/A';
+          htmlStr += `<td>${{escapeHtml(String(displayVal))}}</td>`;
         }});
         htmlStr += '</tr>';
       }});
