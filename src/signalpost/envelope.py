@@ -237,7 +237,7 @@ def build_terminal_envelope(
     if profile is not None and not error:
         # Determine presence of facts per category
         has_financials = any(
-            f.field_name in {"revenue", "operating_result", "ordinary_result_before_tax", "equity", "net_income", "total_assets", "total_debt"}
+            f.field_name in {"revenue", "operating_result", "ordinary_result_before_tax", "equity", "net_income", "annual_net_result", "total_assets", "total_debt"}
             for f in profile.facts
         )
         has_roles = any(
@@ -249,7 +249,7 @@ def build_terminal_envelope(
             for f in profile.facts
         )
         has_public_activity = any(
-            f.field_name in {"latest_news_title", "latest_news_date", "registry_last_updated", "legal_status", "founded_date"}
+            f.field_name in {"latest_news_title", "latest_news_date", "registry_last_updated", "registry_registration_date", "legal_status", "founded_date", "foundation_date"}
             for f in profile.facts
         )
         has_website = any(f.field_name == "website" or "website" in f.source_name.lower() for f in profile.facts)
@@ -260,8 +260,11 @@ def build_terminal_envelope(
         jobs_src_status = (profile.source_statuses or {}).get("jobs", "")
         activity_src_status = (profile.source_statuses or {}).get("public_activity", "")
 
-        org_form = next((str(f.value).upper() for f in profile.facts if f.field_name == "org_form"), "")
-        is_accounts_exempt = any(exempt in org_form for exempt in ("ENK", "FLI", "KIRK", "SA", "BA", "BRL"))
+        org_form = next(
+            (str(f.value).upper() for f in profile.facts if f.field_name in {"org_form_code", "org_form_description", "org_form"}),
+            "",
+        )
+        is_accounts_exempt = any(exempt in org_form for exempt in ("ENK", "FLI", "KIRK", "SA", "BA", "BRL", "ENKELTPERSONFORETAK"))
 
         # 1. Registry module
         modules["registry"]["state"] = "available"

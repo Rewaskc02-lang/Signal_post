@@ -2,8 +2,43 @@
 
 from __future__ import annotations
 
+from datetime import date, datetime
+import html
 import json
+from pathlib import Path
 from typing import Any
+
+
+def extract_claim_value(claims_map: dict[str, Any], *field_names: str, default: Any = None) -> Any:
+    """Helper to safely extract the first matching non-null claim value across aliases."""
+    for fn in field_names:
+        if fn in claims_map and claims_map[fn].get("value") is not None:
+            return claims_map[fn]["value"]
+    return default
+
+
+def extract_city_from_claims(claims_map: dict[str, Any]) -> str:
+    """Safely extract registered city from business_address dict or flat fallback."""
+    b_addr = extract_claim_value(claims_map, "business_address")
+    if isinstance(b_addr, dict):
+        city = b_addr.get("city") or b_addr.get("kommune")
+        if city:
+            return str(city).strip()
+    flat_city = extract_claim_value(claims_map, "business_address_city", "city")
+    return str(flat_city).strip() if flat_city else "N/A"
+
+
+def extract_employee_display(claims_map: dict[str, Any]) -> str:
+    """Extract formatted employee count, preserving explicit 0 and showing 'Not reported' for missing."""
+    claim = claims_map.get("employee_count") or claims_map.get("employees")
+    if claim is not None and claim.get("value") is not None:
+        v = claim.get("value")
+        try:
+            cnt = int(v)
+            return f"{cnt:,}".replace(",", " ")
+        except (ValueError, TypeError):
+            return str(v)
+    return "Not reported"
 
 
 def render_terminal_profile(envelope: dict[str, Any]) -> str:
@@ -30,13 +65,15 @@ def render_terminal_profile(envelope: dict[str, Any]) -> str:
 
     claims_by_field: dict[str, Any] = {}
     for c in claims:
-        claims_by_field[c.get("field", "")] = c
+        f_name = c.get("field", "")
+        if f_name not in claims_by_field or c.get("as_of"):
+            claims_by_field[f_name] = c
 
-    name = claims_by_field.get("legal_name", {}).get("value") or f"Company {orgnr}"
-    org_form = claims_by_field.get("org_form", {}).get("value") or "N/A"
-    city = claims_by_field.get("business_address_city", {}).get("value") or "N/A"
-    founded = claims_by_field.get("founded_date", {}).get("value") or "N/A"
-    employees = claims_by_field.get("employees", {}).get("value") or "0"
+    name = extract_claim_value(claims_by_field, "legal_name", default=f"Company {orgnr}")
+    org_form = extract_claim_value(claims_by_field, "org_form_description", "org_form_code", "org_form", default="N/A")
+    city = extract_city_from_claims(claims_by_field)
+    founded = extract_claim_value(claims_by_field, "foundation_date", "founded_date", default="N/A")
+    employees = extract_employee_display(claims_by_field)
 
     lines.append(sep)
     lines.append(f"  SIGNALPOST COMPANY PROFILE: {name}")
@@ -83,17 +120,22 @@ def render_terminal_profile(envelope: dict[str, Any]) -> str:
     lines.append("")
     lines.append("  [2] Financial Performance (Regnskapsregisteret):")
     fin_fields = [
-        ("Revenue (Driftsinntekter)", "revenue"),
-        ("Operating Result (Driftsresultat)", "operating_result"),
-        ("Pre-Tax Result (Ordinært resultat)", "ordinary_result_before_tax"),
-        ("Net Annual Income (Årsresultat)", "net_income"),
-        ("Total Equity (Egenkapital)", "equity"),
-        ("Total Assets (Sum eiendeler)", "total_assets"),
+        ("Revenue (Driftsinntekter)", ("revenue",)),
+        ("Operating Result (Driftsresultat)", ("operating_result",)),
+        ("Pre-Tax Result (Ordinært resultat)", ("ordinary_result_before_tax",)),
+        ("Annual Net Result (Årsresultat)", ("annual_net_result", "net_income")),
+        ("Total Equity (Egenkapital)", ("equity",)),
+        ("Total Assets (Sum eiendeler)", ("total_assets",)),
+        ("Total Debt (Sum gjeld)", ("total_debt",)),
     ]
     has_any_fin = False
-    for label, f_key in fin_fields:
-        if f_key in claims_by_field and claims_by_field[f_key].get("value") is not None:
-            c_item = claims_by_field[f_key]
+    for label, f_keys in fin_fields:
+        c_item = None
+        for fk in f_keys:
+            if fk in claims_by_field and claims_by_field[fk].get("value") is not None:
+                c_item = claims_by_field[fk]
+                break
+        if c_item:
             v = c_item["value"]
             u = c_item.get("unit", "NOK")
             as_of_str = f" [as of {c_item.get('as_of')}]" if c_item.get("as_of") else ""
@@ -189,18 +231,7 @@ def render_terminal_profile(envelope: dict[str, Any]) -> str:
 
 
 def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, title: str = "Signalpost Evaluation Dashboard") -> None:
-    """Generate a minimalist, self-contained, responsive HTML verification dashboard.
-
-    Adheres strictly to the 60-30-10 color rule:
-    - 60% Dominant Neutral: Tinted Jet Black canvas & surfaces (#0C0E12, #12151B)
-    - 30% Structural Secondary: Cards & framing (#181D26 with #3A0F34 plum brand accents)
-    - 10% High-Priority Accent: Amber Gold (#EAAA00) exclusively for primary interactions
-    - Typography: Tinted slate neutral (#DDE3E8) with WCAG AA >= 4.5:1 contrast
-    - Accessibility: Icons paired with all semantic state indicators (no color-only reliance)
-    """
-    import html
-    from pathlib import Path
-
+    """Generate a minimalist, judge-usable, responsive HTML verification dashboard."""
     out_p = Path(output_path)
     total = len(envelopes)
     available_cnt = sum(1 for e in envelopes if e.get("state") == "available")
@@ -229,528 +260,231 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{html.escape(title)}</title>
   <style>
-    /* ==========================================================================
-       60-30-10 DESIGN SYSTEM TOKENS
-       - 60% Dominant Neutral: Jet Black canvas & surfaces (#0c0e12, #12151b)
-       - 30% Structural Neutral & Secondary: Cards, borders & deep plum (#181d26, #3a0f34)
-       - 10% Interactive Accent: Amber Gold (#eaaa00) for high-priority CTA & focus
-       - Typography: Tinted Slate Neutral (#dde3e8) with >= 4.5:1 contrast
-       ========================================================================== */
     :root {{
-      /* 60% Dominant Neutral Surfaces */
       --surface-canvas: #0c0e12;
       --surface-ground: #12151b;
       --surface-sunken: #080a0d;
-
-      /* 30% Structural Elements */
       --surface-card: #181d26;
       --surface-card-hover: #1f2531;
       --surface-subtle: #242b38;
       --border-subtle: rgba(221, 227, 232, 0.08);
       --border-default: rgba(221, 227, 232, 0.14);
       --border-strong: rgba(221, 227, 232, 0.28);
-
-      /* Secondary Brand Color: Deep Plum (#3A0F34) */
       --brand-plum: #3a0f34;
       --brand-plum-surface: rgba(58, 15, 52, 0.40);
       --brand-plum-border: rgba(94, 28, 85, 0.55);
-
-      /* 10% High-Priority Interactive Accent: Amber Gold (#EAAA00) */
       --accent-gold: #eaaa00;
       --accent-gold-hover: #f5b81a;
       --accent-gold-active: #d69800;
       --accent-gold-surface: rgba(234, 170, 0, 0.12);
       --accent-gold-border: rgba(234, 170, 0, 0.38);
-      --accent-gold-text: #0c0e12; /* High-contrast text on gold */
-
-      /* Typography & Neutral Content (#DDE3E8) */
+      --accent-gold-text: #0c0e12;
       --text-pure: #f8fafc;
       --text-primary: #dde3e8;
       --text-secondary: #9da8b6;
       --text-muted: #6e7987;
-
-      /* Accessible Semantic State Tokens (Icon + Text, contrast >= 4.5:1) */
       --state-available: #2ed573;
       --state-available-bg: rgba(46, 213, 115, 0.10);
       --state-available-border: rgba(46, 213, 115, 0.30);
-
       --state-not-available: #9da8b6;
       --state-not-available-bg: rgba(157, 168, 182, 0.10);
       --state-not-available-border: rgba(157, 168, 182, 0.25);
-
       --state-blocked: #fb923c;
       --state-blocked-bg: rgba(251, 146, 60, 0.10);
       --state-blocked-border: rgba(251, 146, 60, 0.30);
-
       --state-ambiguous: #c084fc;
       --state-ambiguous-bg: rgba(192, 132, 252, 0.10);
       --state-ambiguous-border: rgba(192, 132, 252, 0.30);
-
       --state-failed: #f87171;
       --state-failed-bg: rgba(248, 113, 113, 0.10);
       --state-failed-border: rgba(248, 113, 113, 0.30);
-
       --state-not-applicable: #6e7987;
       --state-not-applicable-bg: rgba(110, 121, 135, 0.10);
       --state-not-applicable-border: rgba(110, 121, 135, 0.25);
-
       --radius-sm: 6px;
       --radius-md: 10px;
       --radius-lg: 14px;
       --radius-pill: 9999px;
       --transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }}
-
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
-
     body {{
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
       background: var(--surface-canvas);
       color: var(--text-primary);
       line-height: 1.55;
-      padding: 32px 20px;
+      padding: 32px 20px 80px 20px;
       -webkit-font-smoothing: antialiased;
     }}
-
-    .container {{
-      max-width: 1240px;
-      margin: 0 auto;
-    }}
-
-    /* Top Brand Header */
+    .container {{ max-width: 1260px; margin: 0 auto; }}
     .header {{
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 16px;
-      padding-bottom: 24px;
-      border-bottom: 1px solid var(--border-default);
-      margin-bottom: 28px;
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 16px; padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-default); margin-bottom: 28px;
     }}
-
-    .brand-group {{
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }}
-
+    .brand-group {{ display: flex; align-items: center; gap: 12px; }}
     .brand-mark {{
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 42px;
-      height: 42px;
-      background: var(--brand-plum);
-      border: 1px solid var(--brand-plum-border);
-      border-radius: var(--radius-md);
-      color: var(--accent-gold);
-      font-weight: 800;
-      font-size: 19px;
+      display: inline-flex; align-items: center; justify-content: center;
+      width: 44px; height: 44px; background: var(--brand-plum);
+      border: 1px solid var(--brand-plum-border); border-radius: var(--radius-md);
+      color: var(--accent-gold); font-weight: 800; font-size: 20px;
       box-shadow: 0 4px 12px rgba(58, 15, 52, 0.3);
     }}
-
-    .header-text h1 {{
-      font-size: 22px;
-      font-weight: 700;
-      color: var(--text-pure);
-      letter-spacing: -0.02em;
-    }}
-
-    .header-text p {{
-      color: var(--text-secondary);
-      font-size: 13px;
-      margin-top: 2px;
-    }}
-
+    .header-text h1 {{ font-size: 22px; font-weight: 700; color: var(--text-pure); letter-spacing: -0.02em; }}
+    .header-text p {{ color: var(--text-secondary); font-size: 13px; margin-top: 2px; }}
+    .header-actions {{ display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }}
     .header-badge {{
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: var(--brand-plum-surface);
-      border: 1px solid var(--brand-plum-border);
-      color: var(--text-primary);
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      font-size: 12px;
-      font-weight: 600;
+      display: inline-flex; align-items: center; gap: 8px;
+      background: var(--brand-plum-surface); border: 1px solid var(--brand-plum-border);
+      color: var(--text-primary); padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 600;
     }}
-
     .header-badge .dot {{
-      width: 8px;
-      height: 8px;
-      background: var(--accent-gold);
-      border-radius: 50%;
+      width: 8px; height: 8px; background: var(--accent-gold); border-radius: 50%;
       box-shadow: 0 0 8px var(--accent-gold);
     }}
-
-    /* 60-30-10 Stats Grid */
-    .stats-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
-      gap: 14px;
-      margin-bottom: 28px;
+    .compare-bar-trigger {{
+      background: var(--accent-gold); color: var(--accent-gold-text); border: none;
+      padding: 6px 14px; border-radius: var(--radius-pill); font-size: 12px; font-weight: 700;
+      cursor: pointer; display: none; align-items: center; gap: 6px; transition: var(--transition);
     }}
-
+    .compare-bar-trigger:hover {{ background: var(--accent-gold-hover); }}
+    .stats-grid {{
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+      gap: 14px; margin-bottom: 28px;
+    }}
     .stat-card {{
-      background: var(--surface-card);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      padding: 16px 14px;
-      text-align: center;
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-md); padding: 16px 14px; text-align: center;
       transition: var(--transition);
     }}
-
-    .stat-card:hover {{
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
-    }}
-
+    .stat-card:hover {{ border-color: var(--border-strong); transform: translateY(-1px); }}
     .stat-card.featured {{
       background: linear-gradient(180deg, var(--brand-plum-surface) 0%, var(--surface-card) 100%);
       border-color: var(--brand-plum-border);
     }}
-
-    .stat-card .val {{
-      font-size: 26px;
-      font-weight: 700;
-      color: var(--text-pure);
-      letter-spacing: -0.02em;
-      line-height: 1.2;
-    }}
-
+    .stat-card .val {{ font-size: 26px; font-weight: 700; color: var(--text-pure); letter-spacing: -0.02em; line-height: 1.2; }}
     .stat-card .val.gold {{ color: var(--accent-gold); }}
     .stat-card .val.green {{ color: var(--state-available); }}
     .stat-card .val.muted {{ color: var(--state-not-available); }}
     .stat-card .val.orange {{ color: var(--state-blocked); }}
     .stat-card .val.purple {{ color: var(--state-ambiguous); }}
-
     .stat-card .lbl {{
-      font-size: 11px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 0.6px;
-      font-weight: 600;
-      margin-top: 6px;
+      font-size: 11px; color: var(--text-secondary); text-transform: uppercase;
+      letter-spacing: 0.6px; font-weight: 600; margin-top: 6px;
     }}
-
-    /* Control & Filter Toolbar */
     .toolbar {{
-      background: var(--surface-card);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-lg);
-      padding: 16px;
-      margin-bottom: 24px;
-      display: flex;
-      flex-direction: column;
-      gap: 14px;
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg); padding: 16px; margin-bottom: 24px;
+      display: flex; flex-direction: column; gap: 14px;
     }}
-
-    .search-wrapper {{
-      position: relative;
-      width: 100%;
-    }}
-
+    .search-wrapper {{ position: relative; width: 100%; }}
     .search-wrapper input {{
-      width: 100%;
-      padding: 12px 16px 12px 42px;
-      border-radius: var(--radius-md);
-      border: 1px solid var(--border-default);
-      background: var(--surface-canvas);
-      color: var(--text-pure);
-      font-size: 14px;
-      outline: none;
-      transition: var(--transition);
+      width: 100%; padding: 12px 16px 12px 42px; border-radius: var(--radius-md);
+      border: 1px solid var(--border-default); background: var(--surface-canvas);
+      color: var(--text-pure); font-size: 14px; outline: none; transition: var(--transition);
     }}
-
     .search-wrapper input:focus {{
-      border-color: var(--accent-gold);
-      box-shadow: 0 0 0 3px rgba(234, 170, 0, 0.15);
+      border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(234, 170, 0, 0.15);
     }}
-
     .search-icon {{
-      position: absolute;
-      left: 14px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-muted);
-      font-size: 15px;
-      pointer-events: none;
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      color: var(--text-muted); font-size: 15px; pointer-events: none;
     }}
-
-    .filter-pills {{
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      align-items: center;
+    .filter-pills {{ display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }}
+    .filter-label {{
+      font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+      color: var(--text-muted); font-weight: 700; margin-right: 4px;
     }}
-
     .filter-btn {{
-      background: var(--surface-ground);
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      padding: 6px 14px;
-      border-radius: var(--radius-pill);
-      font-size: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: var(--transition);
+      background: var(--surface-ground); border: 1px solid var(--border-default);
+      color: var(--text-secondary); padding: 6px 14px; border-radius: var(--radius-pill);
+      font-size: 12px; font-weight: 600; cursor: pointer; display: inline-flex;
+      align-items: center; gap: 6px; transition: var(--transition);
     }}
-
-    .filter-btn:hover {{
-      background: var(--surface-card-hover);
-      color: var(--text-pure);
-      border-color: var(--border-strong);
-    }}
-
-    /* Active filter gets the 10% Accent Gold */
+    .filter-btn:hover {{ background: var(--surface-card-hover); color: var(--text-pure); border-color: var(--border-strong); }}
     .filter-btn.active {{
-      background: var(--accent-gold);
-      color: var(--accent-gold-text);
-      border-color: var(--accent-gold);
-      box-shadow: 0 2px 8px rgba(234, 170, 0, 0.25);
+      background: var(--accent-gold); color: var(--accent-gold-text);
+      border-color: var(--accent-gold); box-shadow: 0 2px 8px rgba(234, 170, 0, 0.25);
     }}
-
     .filter-btn .count {{
-      font-size: 11px;
-      opacity: 0.85;
-      padding: 1px 6px;
-      border-radius: var(--radius-pill);
+      font-size: 11px; opacity: 0.85; padding: 1px 6px; border-radius: var(--radius-pill);
       background: rgba(0, 0, 0, 0.15);
     }}
-
-    /* Company List & Cards (30% Structure) */
-    .company-list {{
-      display: flex;
-      flex-direction: column;
-      gap: 16px;
-    }}
-
+    .company-list {{ display: flex; flex-direction: column; gap: 16px; }}
     .company-card {{
-      background: var(--surface-card);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-lg);
-      padding: 22px;
-      transition: var(--transition);
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg); padding: 22px; transition: var(--transition);
     }}
-
-    .company-card:hover {{
-      border-color: var(--border-strong);
-      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
-    }}
-
-    .card-top {{
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 14px;
-      flex-wrap: wrap;
-      gap: 12px;
-    }}
-
-    .comp-name {{
-      font-size: 17px;
-      font-weight: 700;
-      color: var(--text-pure);
-      letter-spacing: -0.01em;
-    }}
-
-    .comp-orgnr {{
-      font-size: 12px;
-      color: var(--accent-gold);
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      margin-top: 2px;
-      font-weight: 600;
-    }}
-
-    /* Semantic State Badges (Icons + Text for WCAG AA compliance) */
+    .company-card:hover {{ border-color: var(--border-strong); box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }}
+    .card-top {{ display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 14px; flex-wrap: wrap; gap: 12px; }}
+    .comp-header {{ display: flex; align-items: center; gap: 12px; }}
+    .compare-checkbox {{ width: 18px; height: 18px; accent-color: var(--accent-gold); cursor: pointer; }}
+    .comp-name {{ font-size: 17px; font-weight: 700; color: var(--text-pure); letter-spacing: -0.01em; }}
+    .comp-orgnr {{ font-size: 12px; color: var(--accent-gold); font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; margin-top: 2px; font-weight: 600; }}
     .badge {{
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 4px 11px;
-      border-radius: var(--radius-pill);
-      font-size: 11px;
-      font-weight: 700;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
-      white-space: nowrap;
+      display: inline-flex; align-items: center; gap: 5px; padding: 4px 11px;
+      border-radius: var(--radius-pill); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.4px; text-transform: uppercase; white-space: nowrap;
     }}
-
-    .badge-available {{
-      background: var(--state-available-bg);
-      color: var(--state-available);
-      border: 1px solid var(--state-available-border);
-    }}
-
-    .badge-not_available {{
-      background: var(--state-not-available-bg);
-      color: var(--state-not-available);
-      border: 1px solid var(--state-not-available-border);
-    }}
-
-    .badge-blocked {{
-      background: var(--state-blocked-bg);
-      color: var(--state-blocked);
-      border: 1px solid var(--state-blocked-border);
-    }}
-
-    .badge-ambiguous {{
-      background: var(--state-ambiguous-bg);
-      color: var(--state-ambiguous);
-      border: 1px solid var(--state-ambiguous-border);
-    }}
-
-    .badge-failed {{
-      background: var(--state-failed-bg);
-      color: var(--state-failed);
-      border: 1px solid var(--state-failed-border);
-    }}
-
-    .badge-not_applicable {{
-      background: var(--state-not-applicable-bg);
-      color: var(--state-not-applicable);
-      border: 1px solid var(--state-not-applicable-border);
-    }}
-
-    /* Executive Summary */
+    .badge-available {{ background: var(--state-available-bg); color: var(--state-available); border: 1px solid var(--state-available-border); }}
+    .badge-not_available {{ background: var(--state-not-available-bg); color: var(--state-not-available); border: 1px solid var(--state-not-available-border); }}
+    .badge-blocked {{ background: var(--state-blocked-bg); color: var(--state-blocked); border: 1px solid var(--state-blocked-border); }}
+    .badge-ambiguous {{ background: var(--state-ambiguous-bg); color: var(--state-ambiguous); border: 1px solid var(--state-ambiguous-border); }}
+    .badge-failed {{ background: var(--state-failed-bg); color: var(--state-failed); border: 1px solid var(--state-failed-border); }}
+    .badge-not_applicable {{ background: var(--state-not-applicable-bg); color: var(--state-not-applicable); border: 1px solid var(--state-not-applicable-border); }}
     .summary-text {{
-      font-size: 13.5px;
-      color: var(--text-primary);
-      margin-bottom: 16px;
-      background: var(--surface-sunken);
-      border: 1px solid var(--border-subtle);
-      border-left: 3px solid var(--accent-gold);
-      padding: 10px 14px;
-      border-radius: var(--radius-sm);
-      line-height: 1.5;
+      font-size: 13.5px; color: var(--text-primary); margin-bottom: 16px;
+      background: var(--surface-sunken); border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-gold); padding: 10px 14px;
+      border-radius: var(--radius-sm); line-height: 1.5;
     }}
-
-    /* Facts Grid */
-    .facts-grid {{
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 10px;
-      margin-bottom: 16px;
-    }}
-
-    .fact-item {{
-      background: var(--surface-ground);
-      border: 1px solid var(--border-subtle);
-      padding: 9px 12px;
-      border-radius: var(--radius-sm);
-    }}
-
-    .fact-lbl {{
-      color: var(--text-secondary);
-      font-size: 10.5px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      font-weight: 600;
-      margin-bottom: 2px;
-    }}
-
-    .fact-val {{
-      font-weight: 600;
-      color: var(--text-pure);
-      font-size: 13px;
-      word-break: break-word;
-    }}
-
-    /* Details Toggle & Provenance Evidence */
-    details {{
-      border-top: 1px solid var(--border-subtle);
-      padding-top: 12px;
-      margin-top: 8px;
-    }}
-
+    .facts-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; margin-bottom: 16px; }}
+    .fact-item {{ background: var(--surface-ground); border: 1px solid var(--border-subtle); padding: 9px 12px; border-radius: var(--radius-sm); }}
+    .fact-lbl {{ color: var(--text-secondary); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 2px; }}
+    .fact-val {{ font-weight: 600; color: var(--text-pure); font-size: 13px; word-break: break-word; }}
+    .fact-sub {{ font-size: 11px; color: var(--text-secondary); margin-top: 2px; }}
+    details {{ border-top: 1px solid var(--border-subtle); padding-top: 12px; margin-top: 8px; }}
     summary.details-toggle {{
-      font-size: 12.5px;
-      font-weight: 600;
-      color: var(--accent-gold);
-      cursor: pointer;
-      user-select: none;
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      transition: var(--transition);
+      font-size: 12.5px; font-weight: 600; color: var(--accent-gold);
+      cursor: pointer; user-select: none; display: inline-flex; align-items: center; gap: 6px; transition: var(--transition);
     }}
-
-    summary.details-toggle:hover {{
-      color: var(--accent-gold-hover);
-      text-decoration: underline;
-    }}
-
-    .details-body {{
-      margin-top: 14px;
-      background: var(--surface-sunken);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      padding: 14px;
-    }}
-
-    .modules-row {{
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      margin-bottom: 14px;
-    }}
-
-    .evidence-table {{
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 11.5px;
-    }}
-
-    .evidence-table th,
-    .evidence-table td {{
-      padding: 8px 10px;
-      border: 1px solid var(--border-subtle);
-      text-align: left;
-    }}
-
-    .evidence-table th {{
-      background: var(--surface-ground);
-      color: var(--text-secondary);
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.4px;
-    }}
-
-    .evidence-table td {{
-      color: var(--text-primary);
-    }}
-
-    .evidence-table a {{
-      color: var(--accent-gold);
-      text-decoration: none;
-      word-break: break-all;
-    }}
-
-    .evidence-table a:hover {{
-      text-decoration: underline;
-    }}
-
-    .mono {{
-      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-      font-size: 11px;
-    }}
-
+    summary.details-toggle:hover {{ color: var(--accent-gold-hover); text-decoration: underline; }}
+    .details-body {{ margin-top: 14px; background: var(--surface-sunken); border: 1px solid var(--border-default); border-radius: var(--radius-md); padding: 14px; }}
+    .modules-row {{ display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }}
+    .evidence-table {{ width: 100%; border-collapse: collapse; font-size: 11.5px; }}
+    .evidence-table th, .evidence-table td {{ padding: 8px 10px; border: 1px solid var(--border-subtle); text-align: left; }}
+    .evidence-table th {{ background: var(--surface-ground); color: var(--text-secondary); font-weight: 600; text-transform: uppercase; letter-spacing: 0.4px; }}
+    .evidence-table td {{ color: var(--text-primary); }}
+    .evidence-table a {{ color: var(--accent-gold); text-decoration: none; word-break: break-all; }}
+    .evidence-table a:hover {{ text-decoration: underline; }}
+    .mono {{ font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; font-size: 11px; }}
     .empty-state {{
-      text-align: center;
-      padding: 48px 24px;
-      color: var(--text-secondary);
-      background: var(--surface-card);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-lg);
-      display: none;
+      text-align: center; padding: 48px 24px; color: var(--text-secondary);
+      background: var(--surface-card); border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg); display: none;
     }}
-
     .empty-state .icon {{ font-size: 32px; margin-bottom: 8px; opacity: 0.6; }}
     .empty-state h3 {{ color: var(--text-pure); font-size: 16px; margin-bottom: 4px; }}
+    .compare-modal {{
+      position: fixed; bottom: 0; left: 0; right: 0; max-height: 80vh;
+      background: var(--surface-card); border-top: 2px solid var(--accent-gold);
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.6); z-index: 1000;
+      padding: 24px; overflow-y: auto; display: none;
+      animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    }}
+    @keyframes slideUp {{ from {{ transform: translateY(100%); }} to {{ transform: translateY(0); }} }}
+    .compare-header {{ display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }}
+    .compare-header h2 {{ font-size: 18px; font-weight: 700; color: var(--text-pure); }}
+    .compare-close {{
+      background: var(--surface-ground); border: 1px solid var(--border-default);
+      color: var(--text-primary); padding: 6px 12px; border-radius: var(--radius-sm);
+      cursor: pointer; font-size: 13px;
+    }}
+    .compare-table {{ width: 100%; border-collapse: collapse; font-size: 13px; }}
+    .compare-table th, .compare-table td {{ padding: 10px 14px; border: 1px solid var(--border-default); vertical-align: top; }}
+    .compare-table th {{ background: var(--surface-ground); color: var(--text-secondary); font-weight: 700; width: 180px; }}
+    .compare-table td {{ background: var(--surface-card); color: var(--text-pure); }}
   </style>
 </head>
 <body>
@@ -763,13 +497,17 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
           <p>Signalpost Verified Company Data • 100% Cryptographic Provenance</p>
         </div>
       </div>
-      <div class="header-badge">
-        <span class="dot"></span>
-        <span>6-State Contract Validated</span>
+      <div class="header-actions">
+        <button id="compareTrigger" class="compare-bar-trigger" onclick="openCompareModal()">
+          Compare (<span id="compareCount">0</span>)
+        </button>
+        <div class="header-badge">
+          <span class="dot"></span>
+          <span>6-State Contract Validated</span>
+        </div>
       </div>
     </header>
 
-    <!-- 60-30-10 Stats Overview -->
     <div class="stats-grid">
       <div class="stat-card featured">
         <div class="val gold">{total}</div>
@@ -805,37 +543,34 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
       </div>
     </div>
 
-    <!-- Minimalist Filter Toolbar -->
     <div class="toolbar">
       <div class="search-wrapper">
         <span class="search-icon">🔍</span>
-        <input type="text" id="searchInput" placeholder="Search by legal name, organisation number, city, or status..." onkeyup="filterCards()">
+        <input type="text" id="searchInput" placeholder="Search by legal name, orgnr, city (e.g. Oslo, Bergen), or industry/NACE (e.g. 62.010, Energi)..." onkeyup="filterCards()">
       </div>
       <div class="filter-pills">
-        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">
-          All <span class="count">{total}</span>
-        </button>
-        <button class="filter-btn" data-filter="available" onclick="setFilter('available', this)">
-          ✓ Available <span class="count">{available_cnt}</span>
-        </button>
-        <button class="filter-btn" data-filter="not_available" onclick="setFilter('not_available', this)">
-          ✕ Not Available <span class="count">{not_avail_cnt}</span>
-        </button>
-        <button class="filter-btn" data-filter="blocked" onclick="setFilter('blocked', this)">
-          ⊘ Blocked <span class="count">{blocked_cnt}</span>
-        </button>
-        <button class="filter-btn" data-filter="ambiguous" onclick="setFilter('ambiguous', this)">
-          ? Ambiguous <span class="count">{ambiguous_cnt}</span>
-        </button>
-        <button class="filter-btn" data-filter="failed" onclick="setFilter('failed', this)">
-          ! Failed <span class="count">{failed_cnt}</span>
-        </button>
+        <span class="filter-label">Availability:</span>
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">All <span class="count">{total}</span></button>
+        <button class="filter-btn" data-filter="available" onclick="setFilter('available', this)">✓ Available <span class="count">{available_cnt}</span></button>
+        <button class="filter-btn" data-filter="not_available" onclick="setFilter('not_available', this)">✕ Not Available <span class="count">{not_avail_cnt}</span></button>
+        <button class="filter-btn" data-filter="blocked" onclick="setFilter('blocked', this)">⊘ Blocked <span class="count">{blocked_cnt}</span></button>
+        <button class="filter-btn" data-filter="ambiguous" onclick="setFilter('ambiguous', this)">? Ambiguous <span class="count">{ambiguous_cnt}</span></button>
+        <button class="filter-btn" data-filter="failed" onclick="setFilter('failed', this)">! Failed <span class="count">{failed_cnt}</span></button>
+      </div>
+      <div class="filter-pills" style="margin-top: 4px;">
+        <span class="filter-label">Category:</span>
+        <button class="filter-btn" data-cat="all" onclick="setCategoryFilter('all', this)">All Categories</button>
+        <button class="filter-btn" data-cat="financials" onclick="setCategoryFilter('financials', this)">Has Financials</button>
+        <button class="filter-btn" data-cat="people" onclick="setCategoryFilter('people', this)">Has Leadership</button>
+        <button class="filter-btn" data-cat="jobs" onclick="setCategoryFilter('jobs', this)">Has Careers</button>
+        <button class="filter-btn" data-cat="website" onclick="setCategoryFilter('website', this)">Has Website</button>
       </div>
     </div>
 
-    <!-- Company Cards List -->
     <div class="company-list" id="companyList">
 """
+
+    cards_json_list: list[dict[str, Any]] = []
 
     for env in envelopes:
         orgnr = env.get("organisation_number", "")
@@ -846,49 +581,121 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
         modules = env.get("modules", {})
         profile = env.get("profile") or {}
 
-        claims_map = {c.get("field", ""): c for c in claims}
-        name = claims_map.get("legal_name", {}).get("value") or f"Company {orgnr}"
+        claims_map: dict[str, Any] = {}
+        revenue_claims: list[dict[str, Any]] = []
+        for c in claims:
+            fn = c.get("field", "")
+            if fn == "revenue" and c.get("value") is not None:
+                revenue_claims.append(c)
+            if fn not in claims_map or c.get("as_of"):
+                claims_map[fn] = c
+
+        revenue_claims.sort(key=lambda x: str(x.get("as_of") or ""), reverse=True)
+
+        name = extract_claim_value(claims_map, "legal_name", default=f"Company {orgnr}")
+        org_form = extract_claim_value(claims_map, "org_form_description", "org_form_code", "org_form", default="N/A")
+        city = extract_city_from_claims(claims_map)
+        employees_str = extract_employee_display(claims_map)
+        nace_code = extract_claim_value(claims_map, "nace_code", default="")
+        nace_desc = extract_claim_value(claims_map, "nace_description", default="")
+        ceo = extract_claim_value(claims_map, "ceo", default="")
+        board_chair = extract_claim_value(claims_map, "board_chair", default="")
+        website = extract_claim_value(claims_map, "website", default="")
+        careers_url = extract_claim_value(claims_map, "careers_url", default="")
+        legal_status = extract_claim_value(claims_map, "legal_status", default="")
+        annual_result = extract_claim_value(claims_map, "annual_net_result", "net_income")
+        operating_res = extract_claim_value(claims_map, "operating_result")
         summary = profile.get("executive_summary", "")
 
+        latest_rev_str = "N/A"
+        prev_rev_str = ""
+        if revenue_claims:
+            r0 = revenue_claims[0]
+            val0 = r0.get("value")
+            u0 = r0.get("unit", "NOK")
+            as0 = f" ({r0.get('as_of')})" if r0.get("as_of") else ""
+            latest_rev_str = f"{val0:,.0f} {u0}{as0}".replace(",", " ") if isinstance(val0, (int, float)) else str(val0)
+            if len(revenue_claims) > 1:
+                r1 = revenue_claims[1]
+                val1 = r1.get("value")
+                u1 = r1.get("unit", "NOK")
+                as1 = f" ({r1.get('as_of')})" if r1.get("as_of") else ""
+                prev_rev_str = f"{val1:,.0f} {u1}{as1}".replace(",", " ") if isinstance(val1, (int, float)) else str(val1)
+
+        cards_json_list.append({
+            "orgnr": orgnr,
+            "name": name,
+            "state": state,
+            "org_form": org_form,
+            "city": city,
+            "employees": employees_str,
+            "revenue": latest_rev_str,
+            "operating_result": f"{operating_res:,.0f} NOK".replace(",", " ") if isinstance(operating_res, (int, float)) else "N/A",
+            "annual_net_result": f"{annual_result:,.0f} NOK".replace(",", " ") if isinstance(annual_result, (int, float)) else "N/A",
+            "ceo": ceo or "Not reported",
+            "board_chair": board_chair or "Not reported",
+            "website": website or "None",
+            "careers_url": careers_url or "None",
+            "legal_status": legal_status or "Normal drift",
+        })
+
+        search_tokens = f"{name} {orgnr} {city} {nace_code} {nace_desc} {org_form} {state}".lower()
+        has_fin_flag = "1" if modules.get("financials", {}).get("state") == "available" else "0"
+        has_people_flag = "1" if modules.get("people", {}).get("state") == "available" else "0"
+        has_jobs_flag = "1" if modules.get("jobs", {}).get("state") == "available" else "0"
+        has_web_flag = "1" if modules.get("website", {}).get("state") == "available" else "0"
+
         html_content += f"""
-      <div class="company-card" data-state="{html.escape(state)}" data-search="{html.escape(f'{name} {orgnr} {state}'.lower())}">
+      <div class="company-card" data-orgnr="{html.escape(orgnr)}" data-state="{html.escape(state)}" data-search="{html.escape(search_tokens)}" data-has-fin="{has_fin_flag}" data-has-people="{has_people_flag}" data-has-jobs="{has_jobs_flag}" data-has-web="{has_web_flag}">
         <div class="card-top">
-          <div>
-            <div class="comp-name">{html.escape(str(name))}</div>
-            <div class="comp-orgnr">Org.nr: {html.escape(str(orgnr))}</div>
+          <div class="comp-header">
+            <input type="checkbox" class="compare-checkbox" title="Select to compare side-by-side" onchange="toggleCompare('{html.escape(orgnr)}')">
+            <div>
+              <div class="comp-name">{html.escape(str(name))}</div>
+              <div class="comp-orgnr">Org.nr: {html.escape(str(orgnr))}</div>
+            </div>
           </div>
           <span class="badge badge-{state}">{sym} {html.escape(state)}</span>
         </div>
 """
         if summary:
-            html_content += f"""        <div class="summary-text">{html.escape(str(summary))}</div>
-"""
+            html_content += f"""        <div class="summary-text">{html.escape(str(summary))}</div>\n"""
 
-        # Key facts grid
-        html_content += """        <div class="facts-grid">
-"""
-        key_fields = [
-            ("Legal Form", "org_form"),
-            ("City", "business_address_city"),
-            ("Employees", "employees"),
-            ("CEO", "ceo"),
-            ("Board Chair", "board_chair"),
-            ("Revenue", "revenue"),
-            ("Website", "website"),
-            ("Careers Portal", "careers_url"),
-            ("Legal Status", "legal_status"),
-        ]
-        for lbl, f_key in key_fields:
-            if f_key in claims_map and claims_map[f_key].get("value") is not None:
-                val = claims_map[f_key]["value"]
-                unit = claims_map[f_key].get("unit", "")
-                val_str = f"{val:,.0f} {unit}".replace(",", " ") if isinstance(val, (int, float)) else f"{val} {unit}"
-                html_content += f"""          <div class="fact-item"><div class="fact-lbl">{html.escape(lbl)}</div><div class="fact-val">{html.escape(val_str.strip())}</div></div>
-"""
-        html_content += """        </div>
-"""
+        html_content += """        <div class="facts-grid">\n"""
+        html_content += f"""          <div class="fact-item"><div class="fact-lbl">Legal Form</div><div class="fact-val">{html.escape(str(org_form))}</div></div>\n"""
+        html_content += f"""          <div class="fact-item"><div class="fact-lbl">Registered City</div><div class="fact-val">{html.escape(str(city))}</div></div>\n"""
+        html_content += f"""          <div class="fact-item"><div class="fact-lbl">Registered Employees</div><div class="fact-val">{html.escape(str(employees_str))}</div></div>\n"""
 
-        # Toggleable details for evidence
+        if nace_desc or nace_code:
+            nace_str = f"{nace_code} {nace_desc}".strip()
+            html_content += f"""          <div class="fact-item"><div class="fact-lbl">Industry / Activity</div><div class="fact-val">{html.escape(nace_str)}</div></div>\n"""
+
+        if ceo or board_chair:
+            lead_str = f"CEO: {ceo}" if ceo else f"Chair: {board_chair}"
+            html_content += f"""          <div class="fact-item"><div class="fact-lbl">Leadership</div><div class="fact-val">{html.escape(lead_str)}</div></div>\n"""
+
+        if revenue_claims:
+            fin_display = f"""          <div class="fact-item"><div class="fact-lbl">Revenue (Latest)</div><div class="fact-val">{html.escape(latest_rev_str)}</div>"""
+            if prev_rev_str:
+                fin_display += f"""<div class="fact-sub">Prior Period: {html.escape(prev_rev_str)}</div>"""
+            fin_display += """</div>\n"""
+            html_content += fin_display
+
+        if annual_result is not None and isinstance(annual_result, (int, float)):
+            res_str = f"{annual_result:,.0f} NOK".replace(",", " ")
+            html_content += f"""          <div class="fact-item"><div class="fact-lbl">Annual Net Result</div><div class="fact-val">{html.escape(res_str)}</div></div>\n"""
+
+        if website:
+            html_content += f"""          <div class="fact-item"><div class="fact-lbl">Website</div><div class="fact-val"><a href="https://{html.escape(str(website))}" target="_blank" rel="noopener" style="color: var(--accent-gold); text-decoration: none;">{html.escape(str(website))}</a></div></div>\n"""
+
+        if careers_url:
+            html_content += f"""          <div class="fact-item"><div class="fact-lbl">Careers Portal</div><div class="fact-val"><a href="{html.escape(str(careers_url))}" target="_blank" rel="noopener" style="color: var(--accent-gold); text-decoration: none;">Open Jobs Portal</a></div></div>\n"""
+
+        if legal_status:
+            html_content += f"""          <div class="fact-item"><div class="fact-lbl">Legal Status</div><div class="fact-val">{html.escape(str(legal_status))}</div></div>\n"""
+
+        html_content += """        </div>\n"""
+
         html_content += f"""
         <details>
           <summary class="details-toggle">View Verified Evidence & Module States ({len(evidence)} sources)</summary>
@@ -899,23 +706,24 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
         for m_name, m_info in sorted(modules.items()):
             m_st = m_info.get("state", "n/a")
             m_sym = state_symbols.get(m_st, "•")
-            html_content += f"""              <span class="badge badge-{m_st}">{m_sym} {html.escape(m_name)}: {html.escape(m_st)}</span>
-"""
+            html_content += f"""              <span class="badge badge-{m_st}">{m_sym} {html.escape(m_name)}: {html.escape(m_st)}</span>\n"""
 
         html_content += """
             </div>
             <table class="evidence-table">
               <thead>
-                <tr><th>ID</th><th>Verified Source URL</th><th>Provenance Class</th><th>SHA-256 Digest</th><th>Claim Scope</th></tr>
+                <tr><th>ID</th><th>Verified Source URL</th><th>Class</th><th>Retrieved (UTC)</th><th>SHA-256 Digest</th><th>Claim Scope</th></tr>
               </thead>
               <tbody>
 """
-        for ev in evidence[:8]:
+        for ev in evidence[:10]:
+            ret_at = ev.get('retrieved_at', '')
             html_content += f"""
                 <tr>
                   <td>{html.escape(ev.get('id', ''))}</td>
                   <td><a href="{html.escape(ev.get('source_url', ''))}" target="_blank" rel="noopener">{html.escape(ev.get('source_url', ''))}</a></td>
                   <td>{html.escape(ev.get('source_class', ''))}</td>
+                  <td class="mono">{html.escape(ret_at[:19] if ret_at else '')}</td>
                   <td class="mono">{html.escape(ev.get('content_sha256', '')[:16])}...</td>
                   <td>{html.escape(ev.get('claim_span', ''))}</td>
                 </tr>
@@ -928,49 +736,163 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
       </div>
 """
 
-    html_content += """
+    cards_json_blob = json.dumps(cards_json_list)
+
+    html_content += f"""
       <div class="empty-state" id="emptyState">
         <div class="icon">🔍</div>
         <h3>No matching companies found</h3>
-        <p>Try clearing your search query or selecting a different status filter.</p>
+        <p>Try clearing your search query or selecting a different status/category filter.</p>
       </div>
     </div>
   </div>
 
-  <script>
-    let activeFilter = 'all';
+  <div class="compare-modal" id="compareModal">
+    <div class="compare-header">
+      <h2>Side-by-Side Company Comparison</h2>
+      <button class="compare-close" onclick="closeCompareModal()">Close Comparison (Esc)</button>
+    </div>
+    <div style="overflow-x: auto;">
+      <table class="compare-table" id="compareTable">
+      </table>
+    </div>
+  </div>
 
-    function setFilter(filter, el) {
+  <script>
+    const companiesData = {cards_json_blob};
+    let activeFilter = 'all';
+    let activeCategory = 'all';
+    const selectedOrgNumbers = new Set();
+
+    function setFilter(filter, el) {{
       activeFilter = filter;
-      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.filter-pills:first-of-type .filter-btn').forEach(btn => btn.classList.remove('active'));
       if (el) el.classList.add('active');
       filterCards();
-    }
+    }}
 
-    function filterCards() {
+    function setCategoryFilter(cat, el) {{
+      activeCategory = cat;
+      document.querySelectorAll('.filter-pills:nth-of-type(2) .filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+      filterCards();
+    }}
+
+    function filterCards() {{
       const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const cards = document.querySelectorAll('.company-card');
       let visibleCount = 0;
 
-      cards.forEach(card => {
+      cards.forEach(card => {{
         const text = card.getAttribute('data-search') || '';
         const state = card.getAttribute('data-state') || '';
+        const hasFin = card.getAttribute('data-has-fin') === '1';
+        const hasPeople = card.getAttribute('data-has-people') === '1';
+        const hasJobs = card.getAttribute('data-has-jobs') === '1';
+        const hasWeb = card.getAttribute('data-has-web') === '1';
+
         const matchesQuery = !q || text.includes(q);
         const matchesState = (activeFilter === 'all') || (state === activeFilter);
+        let matchesCat = true;
+        if (activeCategory === 'financials') matchesCat = hasFin;
+        else if (activeCategory === 'people') matchesCat = hasPeople;
+        else if (activeCategory === 'jobs') matchesCat = hasJobs;
+        else if (activeCategory === 'website') matchesCat = hasWeb;
 
-        if (matchesQuery && matchesState) {
+        if (matchesQuery && matchesState && matchesCat) {{
           card.style.display = 'block';
           visibleCount++;
-        } else {
+        }} else {{
           card.style.display = 'none';
-        }
-      });
+        }}
+      }});
 
       const emptyEl = document.getElementById('emptyState');
-      if (emptyEl) {
+      if (emptyEl) {{
         emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
-      }
-    }
+      }}
+    }}
+
+    function toggleCompare(orgnr) {{
+      if (selectedOrgNumbers.has(orgnr)) {{
+        selectedOrgNumbers.delete(orgnr);
+      }} else {{
+        selectedOrgNumbers.add(orgnr);
+      }}
+      updateCompareUI();
+    }}
+
+    function updateCompareUI() {{
+      const count = selectedOrgNumbers.size;
+      const countEl = document.getElementById('compareCount');
+      const triggerEl = document.getElementById('compareTrigger');
+      if (countEl) countEl.innerText = count;
+      if (triggerEl) triggerEl.style.display = count > 0 ? 'inline-flex' : 'none';
+      if (count === 0) closeCompareModal();
+      else if (document.getElementById('compareModal').style.display === 'block') renderCompareTable();
+    }}
+
+    function openCompareModal() {{
+      renderCompareTable();
+      document.getElementById('compareModal').style.display = 'block';
+    }}
+
+    function closeCompareModal() {{
+      document.getElementById('compareModal').style.display = 'none';
+    }}
+
+    document.addEventListener('keydown', (e) => {{
+      if (e.key === 'Escape') closeCompareModal();
+    }});
+
+    function renderCompareTable() {{
+      const table = document.getElementById('compareTable');
+      if (!table) return;
+      const selectedList = companiesData.filter(c => selectedOrgNumbers.has(c.orgnr));
+      if (selectedList.length === 0) {{
+        table.innerHTML = '<tr><td>No companies selected for comparison.</td></tr>';
+        return;
+      }}
+
+      const rows = [
+        {{ label: 'Company Name', key: 'name' }},
+        {{ label: 'Organisation Number', key: 'orgnr' }},
+        {{ label: 'Contract State', key: 'state' }},
+        {{ label: 'Legal Structure', key: 'org_form' }},
+        {{ label: 'Registered City', key: 'city' }},
+        {{ label: 'Registered Employees', key: 'employees' }},
+        {{ label: 'Annual Revenue', key: 'revenue' }},
+        {{ label: 'Operating Result', key: 'operating_result' }},
+        {{ label: 'Annual Net Result', key: 'annual_net_result' }},
+        {{ label: 'CEO / Daglig leder', key: 'ceo' }},
+        {{ label: 'Board Chair', key: 'board_chair' }},
+        {{ label: 'Website', key: 'website' }},
+        {{ label: 'Careers Portal', key: 'careers_url' }},
+        {{ label: 'Legal Status', key: 'legal_status' }},
+      ];
+
+      let htmlStr = '<thead><tr><th>Attribute</th>';
+      selectedList.forEach(c => {{
+        htmlStr += `<th>${{escapeHtml(c.name)}}<br><small style="color: var(--accent-gold);">${{escapeHtml(c.orgnr)}}</small></th>`;
+      }});
+      htmlStr += '</tr></thead><tbody>';
+
+      rows.forEach(r => {{
+        htmlStr += `<tr><th>${{escapeHtml(r.label)}}</th>`;
+        selectedList.forEach(c => {{
+          htmlStr += `<td>${{escapeHtml(c[r.key] || 'N/A')}}</td>`;
+        }});
+        htmlStr += '</tr>';
+      }});
+      htmlStr += '</tbody>';
+      table.innerHTML = htmlStr;
+    }}
+
+    function escapeHtml(text) {{
+      const div = document.createElement('div');
+      div.innerText = text || '';
+      return div.innerHTML;
+    }}
   </script>
 </body>
 </html>
@@ -978,4 +900,3 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
 
     out_p.parent.mkdir(parents=True, exist_ok=True)
     out_p.write_text(html_content, encoding="utf-8")
-

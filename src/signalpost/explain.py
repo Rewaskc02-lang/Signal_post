@@ -155,36 +155,123 @@ def generate_fact_note(fact: CompanyFact) -> str:
 
 
 def generate_deterministic_summary(profile: CompanyProfile) -> str:
-    """Generate a clean 2-3 sentence summary using deterministic rules (zero LLM cost)."""
-    facts_map = {f.field_name: f for f in profile.facts}
+    """Generate a clean 2-4 sentence summary using deterministic rules (zero LLM cost).
 
-    legal_name = facts_map.get("legal_name").value if "legal_name" in facts_map else f"Organisation {profile.orgnr}"
-    org_form = facts_map.get("org_form_description").value if "org_form_description" in facts_map else "business entity"
-    nace_desc = facts_map.get("nace_description").value if "nace_description" in facts_map else None
-    status = facts_map.get("status").value if "status" in facts_map else "active"
+    Strict synthesis rules:
+    - Selects financial facts by greatest valid as_of date, never by input order.
+    - Reconciles with latest_accounting_year if reported.
+    - Includes exact fiscal year and reported currency.
+    - If dates conflict or are absent, labels the period as unknown/ambiguous.
+    - Describes trends ONLY when comparable, period-aligned source values support it.
+    - Distinguishes explicitly between 0 employees and missing/unreported employees.
+    """
+    facts_by_field: dict[str, list[CompanyFact]] = {}
+    for f in profile.facts:
+        facts_by_field.setdefault(f.field_name, []).append(f)
 
-    sentence_1 = f"{legal_name} is a Norwegian {org_form} (org. nr. {profile.orgnr}) currently with '{status}' legal status."
+    legal_name = facts_by_field.get("legal_name", [None])[0]
+    name_str = str(legal_name.value) if legal_name and legal_name.value else f"Organisation {profile.orgnr}"
 
-    if nace_desc:
-        sentence_2 = f"The company's primary registered activity is {nace_desc.lower()}."
+    org_form_desc = facts_by_field.get("org_form_description", [None])[0]
+    org_form_str = str(org_form_desc.value) if org_form_desc and org_form_desc.value else "business entity"
+
+    nace_desc = facts_by_field.get("nace_description", [None])[0]
+    status_fact = facts_by_field.get("status", [None])[0]
+    status_str = str(status_fact.value) if status_fact and status_fact.value else "active"
+
+    sentence_1 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) currently with '{status_str}' legal status."
+
+    if nace_desc and nace_desc.value:
+        sentence_2 = f"The company's primary registered activity is {str(nace_desc.value).lower()}."
     else:
         sentence_2 = "The company is officially registered in Brønnøysundregistrene."
 
-    # Financial sentence
-    rev_fact = facts_map.get("revenue")
-    emp_fact = facts_map.get("employee_count")
+    # Employee count handling: explicit 0 vs missing
+    emp_facts = facts_by_field.get("employee_count", [])
+    emp_clause = ""
+    if emp_facts and emp_facts[0].value is not None:
+        try:
+            cnt = int(emp_facts[0].value)
+            emp_clause = f"{cnt:,} registered employees"
+        except (ValueError, TypeError):
+            emp_clause = f"{emp_facts[0].value} registered employees"
 
-    financial_parts = []
-    if emp_fact and emp_fact.value:
-        financial_parts.append(f"{emp_fact.value:,} registered employees")
-    if rev_fact and rev_fact.value is not None:
-        year_str = str(rev_fact.as_of.year) if isinstance(rev_fact.as_of, (date, datetime)) else ""
-        val_str = f"{rev_fact.value:,.0f} {rev_fact.unit or 'NOK'}"
-        year_clause = f" for fiscal year {year_str}" if year_str else ""
-        financial_parts.append(f"revenue of {val_str}{year_clause}")
+    # Financial facts grouped by as_of period
+    revenue_facts = facts_by_field.get("revenue", [])
 
-    if financial_parts:
-        sentence_3 = f"Latest registry records indicate {' and '.join(financial_parts)}."
+    # Sort revenue facts by valid as_of date descending
+    dated_revenues: list[tuple[date, CompanyFact]] = []
+    undated_revenues: list[CompanyFact] = []
+    for rf in revenue_facts:
+        if rf.value is not None:
+            if isinstance(rf.as_of, (date, datetime)):
+                d = rf.as_of if isinstance(rf.as_of, date) and not isinstance(rf.as_of, datetime) else rf.as_of.date()
+                dated_revenues.append((d, rf))
+            elif isinstance(rf.as_of, str):
+                try:
+                    d = date.fromisoformat(rf.as_of[:10])
+                    dated_revenues.append((d, rf))
+                except ValueError:
+                    undated_revenues.append(rf)
+            else:
+                undated_revenues.append(rf)
+
+    # Sort descending: greatest valid as_of date first
+    dated_revenues.sort(key=lambda x: x[0], reverse=True)
+
+    latest_rev_fact: CompanyFact | None = None
+    latest_period_str = ""
+    trend_str = ""
+
+    if dated_revenues:
+        latest_date, latest_rev_fact = dated_revenues[0]
+        latest_period_str = str(latest_date.year)
+
+        # Check for comparable prior period for truthful trend description
+        if len(dated_revenues) >= 2:
+            prev_date, prev_rev_fact = dated_revenues[1]
+            if (
+                latest_rev_fact.unit == prev_rev_fact.unit
+                and isinstance(latest_rev_fact.value, (int, float))
+                and isinstance(prev_rev_fact.value, (int, float))
+                and prev_date.year == latest_date.year - 1
+            ):
+                curr_v = float(latest_rev_fact.value)
+                prev_v = float(prev_rev_fact.value)
+                u = latest_rev_fact.unit or "NOK"
+                if curr_v > prev_v:
+                    trend_str = f" (an increase from {prev_v:,.0f} {u} in {prev_date.year})"
+                elif curr_v < prev_v:
+                    trend_str = f" (down from {prev_v:,.0f} {u} in {prev_date.year})"
+                else:
+                    trend_str = f" (stable compared to {prev_date.year})"
+    elif undated_revenues:
+        latest_rev_fact = undated_revenues[0]
+        latest_period_str = "an unspecified period"
+
+    # Check latest_accounting_year reconciliation
+    latest_acc_facts = facts_by_field.get("latest_accounting_year", [])
+    acc_year_val = str(latest_acc_facts[0].value).strip() if latest_acc_facts and latest_acc_facts[0].value else ""
+
+    sentence_3_parts = []
+    if emp_clause:
+        sentence_3_parts.append(emp_clause)
+
+    if latest_rev_fact and latest_rev_fact.value is not None:
+        curr_u = latest_rev_fact.unit or "NOK"
+        val_f = f"{latest_rev_fact.value:,.0f} {curr_u}" if isinstance(latest_rev_fact.value, (int, float)) else f"{latest_rev_fact.value} {curr_u}"
+
+        if acc_year_val and latest_period_str.isdigit() and acc_year_val != latest_period_str:
+            sentence_3_parts.append(
+                f"annual revenue of {val_f} for fiscal year {latest_period_str}{trend_str} (latest submitted accounts noted as {acc_year_val})"
+            )
+        else:
+            sentence_3_parts.append(
+                f"annual revenue of {val_f} for fiscal year {latest_period_str}{trend_str}"
+            )
+
+    if sentence_3_parts:
+        sentence_3 = f"Latest registry records indicate {' and '.join(sentence_3_parts)}."
     else:
         sentence_3 = "No annual accounts or employee records are currently filed in public registries."
 

@@ -148,4 +148,35 @@ def extract_job_facts(
             )
         )
 
+    # 3. Extract individual job vacancy titles if listed on the page
+    job_link_matches = re.findall(
+        r'<a\s+[^>]*?href=["\'][^"\']*(?:job|stilling|karriere|position|vacancy)[^"\']*["\'][^>]*>(.*?)</a>',
+        page_content,
+        re.IGNORECASE | re.DOTALL,
+    )
+    seen_jobs: set[str] = set()
+    for raw_title in job_link_matches:
+        clean = re.sub(r"<[^>]+>", " ", raw_title)
+        clean = html.unescape(clean)
+        clean = re.sub(r"\s+", " ", clean).strip()
+        if len(clean) >= 6 and not any(nav in clean.lower() for nav in ("se alle", "les mer", "read more", "careers", "karriere", "stillinger", "jobber", "view all")):
+            if clean.lower() not in seen_jobs:
+                seen_jobs.add(clean.lower())
+                facts.append(
+                    CompanyFact(
+                        field_name="job_title",
+                        value=clean,
+                        source_name="Company Careers",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.85,
+                        content_hash=raw_hash,
+                        extraction_method="html_job_listing",
+                    )
+                )
+                if len(seen_jobs) >= 5:
+                    break
+
     return facts

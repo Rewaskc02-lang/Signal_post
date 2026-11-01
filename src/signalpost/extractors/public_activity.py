@@ -75,33 +75,94 @@ def extract_website_public_activity(
             )
         )
 
-    # 2. Extract recent article / announcement headlines if present in news/article tags
-    # Check for <article> or <div class="*news*"> or <h3> headline
-    headline_match = re.search(
-        r'<(?:article|div)[^>]*?(?:class|id)=["\'][^"\']*(?:news|presse|aktuelt|article|post)[^"\']*["\'][^>]*>.*?<h[2-4][^>]*>(.*?)</h[2-4]>',
+    # 2. Extract recent article / announcement headlines with dates
+    article_blocks = re.findall(
+        r'<(?:article|div|section)[^>]*?(?:class|id)=["\'][^"\']*(?:news|presse|aktuelt|article|post|announcement)[^"\']*["\'][^>]*>(.*?)</(?:article|div|section)>',
         page_content,
         re.IGNORECASE | re.DOTALL,
     )
-    if headline_match:
-        raw_headline = headline_match.group(1)
+    if not article_blocks:
+        article_blocks = [page_content]
+
+    seen_headlines: set[str] = set()
+    found_first_date: str | None = None
+
+    for block in article_blocks[:6]:
+        h_match = re.search(r'<h[2-4][^>]*>(.*?)</h[2-4]>', block, re.IGNORECASE | re.DOTALL)
+        if not h_match:
+            continue
+        raw_headline = h_match.group(1)
         clean_headline = re.sub(r"<[^>]+>", " ", raw_headline)
         clean_headline = html.unescape(clean_headline)
         clean_headline = re.sub(r"\s+", " ", clean_headline).strip()
-        if len(clean_headline) >= 10:
+        if len(clean_headline) < 10 or clean_headline.lower() in seen_headlines:
+            continue
+        seen_headlines.add(clean_headline.lower())
+
+        block_date: date | None = None
+        date_str_val: str | None = None
+
+        time_match = re.search(r'<time[^>]*datetime=["\'](\d{4}-\d{2}-\d{2})', block, re.IGNORECASE)
+        if time_match:
+            try:
+                block_date = date.fromisoformat(time_match.group(1))
+                date_str_val = block_date.isoformat()
+            except ValueError:
+                pass
+
+        if not block_date:
+            text_d_match = re.search(r'\b(202[0-9]-[0-1][0-9]-[0-3][0-9])\b', block)
+            if text_d_match:
+                try:
+                    block_date = date.fromisoformat(text_d_match.group(1))
+                    date_str_val = block_date.isoformat()
+                except ValueError:
+                    pass
+
+        if not block_date:
+            nor_d_match = re.search(r'\b([0-3]?[0-9])\.([0-1]?[0-9])\.(202[0-9])\b', block)
+            if nor_d_match:
+                try:
+                    day, month, year = int(nor_d_match.group(1)), int(nor_d_match.group(2)), int(nor_d_match.group(3))
+                    block_date = date(year, month, day)
+                    date_str_val = block_date.isoformat()
+                except (ValueError, TypeError):
+                    pass
+
+        facts.append(
+            CompanyFact(
+                field_name="latest_news_title",
+                value=clean_headline,
+                source_name="Company Press / News",
+                source_url=page_url,
+                as_of=block_date,
+                retrieved_at=fetch_time,
+                confidence="verified_secondary",
+                confidence_level=0.85,
+                content_hash=raw_hash,
+                extraction_method="html_article_headline",
+            )
+        )
+
+        if date_str_val and not found_first_date:
+            found_first_date = date_str_val
             facts.append(
                 CompanyFact(
-                    field_name="latest_news_title",
-                    value=clean_headline,
+                    field_name="latest_news_date",
+                    value=date_str_val,
                     source_name="Company Press / News",
                     source_url=page_url,
-                    as_of=None,
+                    as_of=block_date,
                     retrieved_at=fetch_time,
                     confidence="verified_secondary",
                     confidence_level=0.85,
                     content_hash=raw_hash,
-                    extraction_method="html_article_headline",
+                    extraction_method="html_article_date",
                 )
             )
+
+        if len(seen_headlines) >= 3:
+            break
 
     return facts
 
