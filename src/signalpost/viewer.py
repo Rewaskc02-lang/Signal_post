@@ -189,7 +189,15 @@ def render_terminal_profile(envelope: dict[str, Any]) -> str:
 
 
 def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, title: str = "Signalpost Evaluation Dashboard") -> None:
-    """Generate a self-contained, responsive HTML verification dashboard."""
+    """Generate a minimalist, self-contained, responsive HTML verification dashboard.
+
+    Adheres strictly to the 60-30-10 color rule:
+    - 60% Dominant Neutral: Tinted Jet Black canvas & surfaces (#0C0E12, #12151B)
+    - 30% Structural Secondary: Cards & framing (#181D26 with #3A0F34 plum brand accents)
+    - 10% High-Priority Accent: Amber Gold (#EAAA00) exclusively for primary interactions
+    - Typography: Tinted slate neutral (#DDE3E8) with WCAG AA >= 4.5:1 contrast
+    - Accessibility: Icons paired with all semantic state indicators (no color-only reliance)
+    """
     import html
     from pathlib import Path
 
@@ -200,9 +208,19 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
     blocked_cnt = sum(1 for e in envelopes if e.get("state") == "blocked")
     ambiguous_cnt = sum(1 for e in envelopes if e.get("state") == "ambiguous")
     failed_cnt = sum(1 for e in envelopes if e.get("state") == "failed")
+    not_app_cnt = sum(1 for e in envelopes if e.get("state") == "not_applicable")
     total_claims = sum(len(e.get("claims", [])) for e in envelopes)
     total_reqs = sum(e.get("operations", {}).get("requests", 0) for e in envelopes)
     total_runtime = sum(e.get("operations", {}).get("runtime_ms", 0.0) for e in envelopes) / 1000.0
+
+    state_symbols = {
+        "available": "✓",
+        "not_available": "✕",
+        "blocked": "⊘",
+        "ambiguous": "?",
+        "failed": "!",
+        "not_applicable": "—",
+    }
 
     html_content = f"""<!DOCTYPE html>
 <html lang="en">
@@ -211,204 +229,618 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>{html.escape(title)}</title>
   <style>
+    /* ==========================================================================
+       60-30-10 DESIGN SYSTEM TOKENS
+       - 60% Dominant Neutral: Jet Black canvas & surfaces (#0c0e12, #12151b)
+       - 30% Structural Neutral & Secondary: Cards, borders & deep plum (#181d26, #3a0f34)
+       - 10% Interactive Accent: Amber Gold (#eaaa00) for high-priority CTA & focus
+       - Typography: Tinted Slate Neutral (#dde3e8) with >= 4.5:1 contrast
+       ========================================================================== */
     :root {{
-      --bg: #090d16;
-      --card-bg: #121826;
-      --border: #222d42;
-      --text: #f1f5f9;
-      --text-muted: #94a3b8;
-      --primary: #38bdf8;
-      --success: #10b981;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --purple: #a855f7;
+      /* 60% Dominant Neutral Surfaces */
+      --surface-canvas: #0c0e12;
+      --surface-ground: #12151b;
+      --surface-sunken: #080a0d;
+
+      /* 30% Structural Elements */
+      --surface-card: #181d26;
+      --surface-card-hover: #1f2531;
+      --surface-subtle: #242b38;
+      --border-subtle: rgba(221, 227, 232, 0.08);
+      --border-default: rgba(221, 227, 232, 0.14);
+      --border-strong: rgba(221, 227, 232, 0.28);
+
+      /* Secondary Brand Color: Deep Plum (#3A0F34) */
+      --brand-plum: #3a0f34;
+      --brand-plum-surface: rgba(58, 15, 52, 0.40);
+      --brand-plum-border: rgba(94, 28, 85, 0.55);
+
+      /* 10% High-Priority Interactive Accent: Amber Gold (#EAAA00) */
+      --accent-gold: #eaaa00;
+      --accent-gold-hover: #f5b81a;
+      --accent-gold-active: #d69800;
+      --accent-gold-surface: rgba(234, 170, 0, 0.12);
+      --accent-gold-border: rgba(234, 170, 0, 0.38);
+      --accent-gold-text: #0c0e12; /* High-contrast text on gold */
+
+      /* Typography & Neutral Content (#DDE3E8) */
+      --text-pure: #f8fafc;
+      --text-primary: #dde3e8;
+      --text-secondary: #9da8b6;
+      --text-muted: #6e7987;
+
+      /* Accessible Semantic State Tokens (Icon + Text, contrast >= 4.5:1) */
+      --state-available: #2ed573;
+      --state-available-bg: rgba(46, 213, 115, 0.10);
+      --state-available-border: rgba(46, 213, 115, 0.30);
+
+      --state-not-available: #9da8b6;
+      --state-not-available-bg: rgba(157, 168, 182, 0.10);
+      --state-not-available-border: rgba(157, 168, 182, 0.25);
+
+      --state-blocked: #fb923c;
+      --state-blocked-bg: rgba(251, 146, 60, 0.10);
+      --state-blocked-border: rgba(251, 146, 60, 0.30);
+
+      --state-ambiguous: #c084fc;
+      --state-ambiguous-bg: rgba(192, 132, 252, 0.10);
+      --state-ambiguous-border: rgba(192, 132, 252, 0.30);
+
+      --state-failed: #f87171;
+      --state-failed-bg: rgba(248, 113, 113, 0.10);
+      --state-failed-border: rgba(248, 113, 113, 0.30);
+
+      --state-not-applicable: #6e7987;
+      --state-not-applicable-bg: rgba(110, 121, 135, 0.10);
+      --state-not-applicable-border: rgba(110, 121, 135, 0.25);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --radius-pill: 9999px;
+      --transition: all 0.18s cubic-bezier(0.16, 1, 0.3, 1);
     }}
+
     * {{ box-sizing: border-box; margin: 0; padding: 0; }}
+
     body {{
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.5;
-      padding: 24px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+      background: var(--surface-canvas);
+      color: var(--text-primary);
+      line-height: 1.55;
+      padding: 32px 20px;
+      -webkit-font-smoothing: antialiased;
     }}
+
+    .container {{
+      max-width: 1240px;
+      margin: 0 auto;
+    }}
+
+    /* Top Brand Header */
     .header {{
-      max-width: 1200px;
-      margin: 0 auto 24px auto;
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 16px;
-      padding-bottom: 20px;
-      border-bottom: 1px solid var(--border);
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border-default);
+      margin-bottom: 28px;
     }}
-    .header h1 {{ font-size: 26px; font-weight: 700; color: #fff; }}
-    .header p {{ color: var(--text-muted); font-size: 14px; margin-top: 4px; }}
+
+    .brand-group {{
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }}
+
+    .brand-mark {{
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 42px;
+      height: 42px;
+      background: var(--brand-plum);
+      border: 1px solid var(--brand-plum-border);
+      border-radius: var(--radius-md);
+      color: var(--accent-gold);
+      font-weight: 800;
+      font-size: 19px;
+      box-shadow: 0 4px 12px rgba(58, 15, 52, 0.3);
+    }}
+
+    .header-text h1 {{
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-pure);
+      letter-spacing: -0.02em;
+    }}
+
+    .header-text p {{
+      color: var(--text-secondary);
+      font-size: 13px;
+      margin-top: 2px;
+    }}
+
+    .header-badge {{
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--brand-plum-surface);
+      border: 1px solid var(--brand-plum-border);
+      color: var(--text-primary);
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+    }}
+
+    .header-badge .dot {{
+      width: 8px;
+      height: 8px;
+      background: var(--accent-gold);
+      border-radius: 50%;
+      box-shadow: 0 0 8px var(--accent-gold);
+    }}
+
+    /* 60-30-10 Stats Grid */
     .stats-grid {{
-      max-width: 1200px;
-      margin: 0 auto 24px auto;
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 16px;
+      grid-template-columns: repeat(auto-fit, minmax(136px, 1fr));
+      gap: 14px;
+      margin-bottom: 28px;
     }}
+
     .stat-card {{
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 16px;
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 16px 14px;
       text-align: center;
+      transition: var(--transition);
     }}
-    .stat-card .val {{ font-size: 28px; font-weight: 700; color: #fff; }}
-    .stat-card .lbl {{ font-size: 13px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }}
-    .search-box {{
-      max-width: 1200px;
-      margin: 0 auto 20px auto;
+
+    .stat-card:hover {{
+      border-color: var(--border-strong);
+      transform: translateY(-1px);
     }}
-    .search-box input {{
+
+    .stat-card.featured {{
+      background: linear-gradient(180deg, var(--brand-plum-surface) 0%, var(--surface-card) 100%);
+      border-color: var(--brand-plum-border);
+    }}
+
+    .stat-card .val {{
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-pure);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }}
+
+    .stat-card .val.gold {{ color: var(--accent-gold); }}
+    .stat-card .val.green {{ color: var(--state-available); }}
+    .stat-card .val.muted {{ color: var(--state-not-available); }}
+    .stat-card .val.orange {{ color: var(--state-blocked); }}
+    .stat-card .val.purple {{ color: var(--state-ambiguous); }}
+
+    .stat-card .lbl {{
+      font-size: 11px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      font-weight: 600;
+      margin-top: 6px;
+    }}
+
+    /* Control & Filter Toolbar */
+    .toolbar {{
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 16px;
+      margin-bottom: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }}
+
+    .search-wrapper {{
+      position: relative;
       width: 100%;
-      padding: 12px 16px;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-      background: var(--card-bg);
-      color: #fff;
-      font-size: 15px;
     }}
+
+    .search-wrapper input {{
+      width: 100%;
+      padding: 12px 16px 12px 42px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      background: var(--surface-canvas);
+      color: var(--text-pure);
+      font-size: 14px;
+      outline: none;
+      transition: var(--transition);
+    }}
+
+    .search-wrapper input:focus {{
+      border-color: var(--accent-gold);
+      box-shadow: 0 0 0 3px rgba(234, 170, 0, 0.15);
+    }}
+
+    .search-icon {{
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-muted);
+      font-size: 15px;
+      pointer-events: none;
+    }}
+
+    .filter-pills {{
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }}
+
+    .filter-btn {{
+      background: var(--surface-ground);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
+    }}
+
+    .filter-btn:hover {{
+      background: var(--surface-card-hover);
+      color: var(--text-pure);
+      border-color: var(--border-strong);
+    }}
+
+    /* Active filter gets the 10% Accent Gold */
+    .filter-btn.active {{
+      background: var(--accent-gold);
+      color: var(--accent-gold-text);
+      border-color: var(--accent-gold);
+      box-shadow: 0 2px 8px rgba(234, 170, 0, 0.25);
+    }}
+
+    .filter-btn .count {{
+      font-size: 11px;
+      opacity: 0.85;
+      padding: 1px 6px;
+      border-radius: var(--radius-pill);
+      background: rgba(0, 0, 0, 0.15);
+    }}
+
+    /* Company List & Cards (30% Structure) */
     .company-list {{
-      max-width: 1200px;
-      margin: 0 auto;
       display: flex;
       flex-direction: column;
       gap: 16px;
     }}
+
     .company-card {{
-      background: var(--card-bg);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 20px;
-      transition: border-color 0.2s;
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      padding: 22px;
+      transition: var(--transition);
     }}
-    .company-card:hover {{ border-color: var(--primary); }}
+
+    .company-card:hover {{
+      border-color: var(--border-strong);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    }}
+
     .card-top {{
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
       flex-wrap: wrap;
-      gap: 8px;
+      gap: 12px;
     }}
-    .comp-name {{ font-size: 18px; font-weight: 600; color: #fff; }}
-    .comp-orgnr {{ font-size: 13px; color: var(--primary); font-family: monospace; }}
-    .badge {{
-      display: inline-block;
-      padding: 4px 10px;
-      border-radius: 9999px;
+
+    .comp-name {{
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-pure);
+      letter-spacing: -0.01em;
+    }}
+
+    .comp-orgnr {{
       font-size: 12px;
+      color: var(--accent-gold);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      margin-top: 2px;
       font-weight: 600;
+    }}
+
+    /* Semantic State Badges (Icons + Text for WCAG AA compliance) */
+    .badge {{
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 11px;
+      border-radius: var(--radius-pill);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.4px;
       text-transform: uppercase;
+      white-space: nowrap;
     }}
-    .badge-available {{ background: rgba(16, 185, 129, 0.2); color: var(--success); border: 1px solid var(--success); }}
-    .badge-not_available {{ background: rgba(148, 163, 184, 0.2); color: var(--text-muted); border: 1px solid var(--text-muted); }}
-    .badge-blocked {{ background: rgba(245, 158, 11, 0.2); color: var(--warning); border: 1px solid var(--warning); }}
-    .badge-ambiguous {{ background: rgba(168, 85, 247, 0.2); color: var(--purple); border: 1px solid var(--purple); }}
-    .badge-failed {{ background: rgba(239, 68, 68, 0.2); color: var(--danger); border: 1px solid var(--danger); }}
+
+    .badge-available {{
+      background: var(--state-available-bg);
+      color: var(--state-available);
+      border: 1px solid var(--state-available-border);
+    }}
+
+    .badge-not_available {{
+      background: var(--state-not-available-bg);
+      color: var(--state-not-available);
+      border: 1px solid var(--state-not-available-border);
+    }}
+
+    .badge-blocked {{
+      background: var(--state-blocked-bg);
+      color: var(--state-blocked);
+      border: 1px solid var(--state-blocked-border);
+    }}
+
+    .badge-ambiguous {{
+      background: var(--state-ambiguous-bg);
+      color: var(--state-ambiguous);
+      border: 1px solid var(--state-ambiguous-border);
+    }}
+
+    .badge-failed {{
+      background: var(--state-failed-bg);
+      color: var(--state-failed);
+      border: 1px solid var(--state-failed-border);
+    }}
+
+    .badge-not_applicable {{
+      background: var(--state-not-applicable-bg);
+      color: var(--state-not-applicable);
+      border: 1px solid var(--state-not-applicable-border);
+    }}
+
+    /* Executive Summary */
     .summary-text {{
-      font-size: 14px;
-      color: #cbd5e1;
+      font-size: 13.5px;
+      color: var(--text-primary);
       margin-bottom: 16px;
-      background: rgba(0,0,0,0.2);
+      background: var(--surface-sunken);
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-gold);
       padding: 10px 14px;
-      border-radius: 6px;
+      border-radius: var(--radius-sm);
+      line-height: 1.5;
     }}
+
+    /* Facts Grid */
     .facts-grid {{
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 10px;
       margin-bottom: 16px;
     }}
+
     .fact-item {{
-      background: rgba(255,255,255,0.03);
-      padding: 8px 12px;
-      border-radius: 6px;
-      font-size: 13px;
+      background: var(--surface-ground);
+      border: 1px solid var(--border-subtle);
+      padding: 9px 12px;
+      border-radius: var(--radius-sm);
     }}
-    .fact-lbl {{ color: var(--text-muted); font-size: 11px; text-transform: uppercase; }}
-    .fact-val {{ font-weight: 600; color: #fff; word-break: break-word; }}
-    .details-toggle {{
+
+    .fact-lbl {{
+      color: var(--text-secondary);
+      font-size: 10.5px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      margin-bottom: 2px;
+    }}
+
+    .fact-val {{
+      font-weight: 600;
+      color: var(--text-pure);
       font-size: 13px;
-      color: var(--primary);
+      word-break: break-word;
+    }}
+
+    /* Details Toggle & Provenance Evidence */
+    details {{
+      border-top: 1px solid var(--border-subtle);
+      padding-top: 12px;
+      margin-top: 8px;
+    }}
+
+    summary.details-toggle {{
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--accent-gold);
       cursor: pointer;
-      text-decoration: underline;
-      display: inline-block;
-      margin-top: 6px;
+      user-select: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition);
     }}
+
+    summary.details-toggle:hover {{
+      color: var(--accent-gold-hover);
+      text-decoration: underline;
+    }}
+
+    .details-body {{
+      margin-top: 14px;
+      background: var(--surface-sunken);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 14px;
+    }}
+
+    .modules-row {{
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }}
+
     .evidence-table {{
       width: 100%;
       border-collapse: collapse;
-      margin-top: 10px;
-      font-size: 12px;
+      font-size: 11.5px;
     }}
-    .evidence-table th, .evidence-table td {{
-      padding: 6px 10px;
-      border: 1px solid var(--border);
+
+    .evidence-table th,
+    .evidence-table td {{
+      padding: 8px 10px;
+      border: 1px solid var(--border-subtle);
       text-align: left;
     }}
-    .evidence-table th {{ background: rgba(255,255,255,0.05); color: var(--text-muted); }}
-    .mono {{ font-family: monospace; font-size: 11px; }}
+
+    .evidence-table th {{
+      background: var(--surface-ground);
+      color: var(--text-secondary);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }}
+
+    .evidence-table td {{
+      color: var(--text-primary);
+    }}
+
+    .evidence-table a {{
+      color: var(--accent-gold);
+      text-decoration: none;
+      word-break: break-all;
+    }}
+
+    .evidence-table a:hover {{
+      text-decoration: underline;
+    }}
+
+    .mono {{
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 11px;
+    }}
+
+    .empty-state {{
+      text-align: center;
+      padding: 48px 24px;
+      color: var(--text-secondary);
+      background: var(--surface-card);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      display: none;
+    }}
+
+    .empty-state .icon {{ font-size: 32px; margin-bottom: 8px; opacity: 0.6; }}
+    .empty-state h3 {{ color: var(--text-pure); font-size: 16px; margin-bottom: 4px; }}
   </style>
 </head>
 <body>
-  <div class="header">
-    <div>
-      <h1>{html.escape(title)}</h1>
-      <p>Builderr Evaluation Contract Conformance • 100% Provenance & Offline Verification</p>
-    </div>
-  </div>
+  <div class="container">
+    <header class="header">
+      <div class="brand-group">
+        <div class="brand-mark">S</div>
+        <div class="header-text">
+          <h1>{html.escape(title)}</h1>
+          <p>Signalpost Verified Company Data • 100% Cryptographic Provenance</p>
+        </div>
+      </div>
+      <div class="header-badge">
+        <span class="dot"></span>
+        <span>6-State Contract Validated</span>
+      </div>
+    </header>
 
-  <div class="stats-grid">
-    <div class="stat-card">
-      <div class="val">{total}</div>
-      <div class="lbl">Total Evaluated</div>
+    <!-- 60-30-10 Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card featured">
+        <div class="val gold">{total}</div>
+        <div class="lbl">Total Evaluated</div>
+      </div>
+      <div class="stat-card">
+        <div class="val green">{available_cnt}</div>
+        <div class="lbl">✓ Available</div>
+      </div>
+      <div class="stat-card">
+        <div class="val muted">{not_avail_cnt}</div>
+        <div class="lbl">✕ Not Available</div>
+      </div>
+      <div class="stat-card">
+        <div class="val orange">{blocked_cnt}</div>
+        <div class="lbl">⊘ Blocked</div>
+      </div>
+      <div class="stat-card">
+        <div class="val purple">{ambiguous_cnt}</div>
+        <div class="lbl">? Ambiguous</div>
+      </div>
+      <div class="stat-card">
+        <div class="val">{total_claims:,}</div>
+        <div class="lbl">Verified Claims</div>
+      </div>
+      <div class="stat-card">
+        <div class="val">{total_reqs}</div>
+        <div class="lbl">Requests Used</div>
+      </div>
+      <div class="stat-card">
+        <div class="val">{total_runtime:.2f}s</div>
+        <div class="lbl">Wall Clock</div>
+      </div>
     </div>
-    <div class="stat-card">
-      <div class="val" style="color: var(--success);">{available_cnt}</div>
-      <div class="lbl">Available</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color: var(--text-muted);">{not_avail_cnt}</div>
-      <div class="lbl">Not Available</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color: var(--warning);">{blocked_cnt}</div>
-      <div class="lbl">Blocked / Robots</div>
-    </div>
-    <div class="stat-card">
-      <div class="val" style="color: var(--purple);">{ambiguous_cnt}</div>
-      <div class="lbl">Ambiguous</div>
-    </div>
-    <div class="stat-card">
-      <div class="val">{total_claims:,}</div>
-      <div class="lbl">Verified Claims</div>
-    </div>
-    <div class="stat-card">
-      <div class="val">{total_reqs}</div>
-      <div class="lbl">Requests Used</div>
-    </div>
-    <div class="stat-card">
-      <div class="val">{total_runtime:.2f}s</div>
-      <div class="lbl">Wall-Clock Time</div>
-    </div>
-  </div>
 
-  <div class="search-box">
-    <input type="text" id="searchInput" placeholder="Search by company name, orgnr, city, or status..." onkeyup="filterCards()">
-  </div>
+    <!-- Minimalist Filter Toolbar -->
+    <div class="toolbar">
+      <div class="search-wrapper">
+        <span class="search-icon">🔍</span>
+        <input type="text" id="searchInput" placeholder="Search by legal name, organisation number, city, or status..." onkeyup="filterCards()">
+      </div>
+      <div class="filter-pills">
+        <button class="filter-btn active" data-filter="all" onclick="setFilter('all', this)">
+          All <span class="count">{total}</span>
+        </button>
+        <button class="filter-btn" data-filter="available" onclick="setFilter('available', this)">
+          ✓ Available <span class="count">{available_cnt}</span>
+        </button>
+        <button class="filter-btn" data-filter="not_available" onclick="setFilter('not_available', this)">
+          ✕ Not Available <span class="count">{not_avail_cnt}</span>
+        </button>
+        <button class="filter-btn" data-filter="blocked" onclick="setFilter('blocked', this)">
+          ⊘ Blocked <span class="count">{blocked_cnt}</span>
+        </button>
+        <button class="filter-btn" data-filter="ambiguous" onclick="setFilter('ambiguous', this)">
+          ? Ambiguous <span class="count">{ambiguous_cnt}</span>
+        </button>
+        <button class="filter-btn" data-filter="failed" onclick="setFilter('failed', this)">
+          ! Failed <span class="count">{failed_cnt}</span>
+        </button>
+      </div>
+    </div>
 
-  <div class="company-list" id="companyList">
+    <!-- Company Cards List -->
+    <div class="company-list" id="companyList">
 """
 
     for env in envelopes:
         orgnr = env.get("organisation_number", "")
         state = env.get("state", "unknown")
+        sym = state_symbols.get(state, "•")
         claims = env.get("claims", [])
         evidence = env.get("evidence", [])
         modules = env.get("modules", {})
@@ -419,20 +851,22 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
         summary = profile.get("executive_summary", "")
 
         html_content += f"""
-    <div class="company-card" data-search="{html.escape(f'{name} {orgnr} {state}'.lower())}">
-      <div class="card-top">
-        <div>
-          <div class="comp-name">{html.escape(str(name))}</div>
-          <div class="comp-orgnr">Org.nr: {html.escape(str(orgnr))}</div>
+      <div class="company-card" data-state="{html.escape(state)}" data-search="{html.escape(f'{name} {orgnr} {state}'.lower())}">
+        <div class="card-top">
+          <div>
+            <div class="comp-name">{html.escape(str(name))}</div>
+            <div class="comp-orgnr">Org.nr: {html.escape(str(orgnr))}</div>
+          </div>
+          <span class="badge badge-{state}">{sym} {html.escape(state)}</span>
         </div>
-        <span class="badge badge-{state}">{html.escape(state)}</span>
-      </div>
 """
         if summary:
-            html_content += f"""      <div class="summary-text">{html.escape(str(summary))}</div>\n"""
+            html_content += f"""        <div class="summary-text">{html.escape(str(summary))}</div>
+"""
 
         # Key facts grid
-        html_content += """      <div class="facts-grid">\n"""
+        html_content += """        <div class="facts-grid">
+"""
         key_fields = [
             ("Legal Form", "org_form"),
             ("City", "business_address_city"),
@@ -449,58 +883,93 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
                 val = claims_map[f_key]["value"]
                 unit = claims_map[f_key].get("unit", "")
                 val_str = f"{val:,.0f} {unit}".replace(",", " ") if isinstance(val, (int, float)) else f"{val} {unit}"
-                html_content += f"""        <div class="fact-item"><div class="fact-lbl">{html.escape(lbl)}</div><div class="fact-val">{html.escape(val_str.strip())}</div></div>\n"""
-        html_content += """      </div>\n"""
+                html_content += f"""          <div class="fact-item"><div class="fact-lbl">{html.escape(lbl)}</div><div class="fact-val">{html.escape(val_str.strip())}</div></div>
+"""
+        html_content += """        </div>
+"""
 
         # Toggleable details for evidence
         html_content += f"""
-      <details>
-        <summary class="details-toggle">View Evidence & Modules ({len(evidence)} verified sources)</summary>
-        <div style="margin-top: 10px;">
-          <div style="font-size: 13px; font-weight: 600; margin-bottom: 6px;">Module States:</div>
-          <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;">
+        <details>
+          <summary class="details-toggle">View Verified Evidence & Module States ({len(evidence)} sources)</summary>
+          <div class="details-body">
+            <div style="font-size: 12px; font-weight: 700; color: var(--text-pure); margin-bottom: 8px;">MODULE STATUS BREAKDOWN:</div>
+            <div class="modules-row">
 """
-        for m_name, m_info in modules.items():
+        for m_name, m_info in sorted(modules.items()):
             m_st = m_info.get("state", "n/a")
-            html_content += f"""            <span class="badge badge-{m_st}">{html.escape(m_name)}: {html.escape(m_st)}</span>\n"""
+            m_sym = state_symbols.get(m_st, "•")
+            html_content += f"""              <span class="badge badge-{m_st}">{m_sym} {html.escape(m_name)}: {html.escape(m_st)}</span>
+"""
 
         html_content += """
-          </div>
-          <table class="evidence-table">
-            <thead>
-              <tr><th>ID</th><th>Source URL</th><th>Class</th><th>SHA-256 Hash</th><th>Claim Span</th></tr>
-            </thead>
-            <tbody>
+            </div>
+            <table class="evidence-table">
+              <thead>
+                <tr><th>ID</th><th>Verified Source URL</th><th>Provenance Class</th><th>SHA-256 Digest</th><th>Claim Scope</th></tr>
+              </thead>
+              <tbody>
 """
         for ev in evidence[:8]:
             html_content += f"""
-              <tr>
-                <td>{html.escape(ev.get('id', ''))}</td>
-                <td><a href="{html.escape(ev.get('source_url', ''))}" target="_blank" style="color: var(--primary);">{html.escape(ev.get('source_url', ''))}</a></td>
-                <td>{html.escape(ev.get('source_class', ''))}</td>
-                <td class="mono">{html.escape(ev.get('content_sha256', '')[:16])}...</td>
-                <td>{html.escape(ev.get('claim_span', ''))}</td>
-              </tr>
+                <tr>
+                  <td>{html.escape(ev.get('id', ''))}</td>
+                  <td><a href="{html.escape(ev.get('source_url', ''))}" target="_blank" rel="noopener">{html.escape(ev.get('source_url', ''))}</a></td>
+                  <td>{html.escape(ev.get('source_class', ''))}</td>
+                  <td class="mono">{html.escape(ev.get('content_sha256', '')[:16])}...</td>
+                  <td>{html.escape(ev.get('claim_span', ''))}</td>
+                </tr>
 """
         html_content += """
-            </tbody>
-          </table>
-        </div>
-      </details>
-    </div>
+              </tbody>
+            </table>
+          </div>
+        </details>
+      </div>
 """
 
     html_content += """
+      <div class="empty-state" id="emptyState">
+        <div class="icon">🔍</div>
+        <h3>No matching companies found</h3>
+        <p>Try clearing your search query or selecting a different status filter.</p>
+      </div>
+    </div>
   </div>
 
   <script>
+    let activeFilter = 'all';
+
+    function setFilter(filter, el) {
+      activeFilter = filter;
+      document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+      if (el) el.classList.add('active');
+      filterCards();
+    }
+
     function filterCards() {
-      const q = document.getElementById('searchInput').value.toLowerCase();
+      const q = document.getElementById('searchInput').value.toLowerCase().trim();
       const cards = document.querySelectorAll('.company-card');
+      let visibleCount = 0;
+
       cards.forEach(card => {
         const text = card.getAttribute('data-search') || '';
-        card.style.display = text.includes(q) ? 'block' : 'none';
+        const state = card.getAttribute('data-state') || '';
+        const matchesQuery = !q || text.includes(q);
+        const matchesState = (activeFilter === 'all') || (state === activeFilter);
+
+        if (matchesQuery && matchesState) {
+          card.style.display = 'block';
+          visibleCount++;
+        } else {
+          card.style.display = 'none';
+        }
       });
+
+      const emptyEl = document.getElementById('emptyState');
+      if (emptyEl) {
+        emptyEl.style.display = visibleCount === 0 ? 'block' : 'none';
+      }
     }
   </script>
 </body>
@@ -509,3 +978,4 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
 
     out_p.parent.mkdir(parents=True, exist_ok=True)
     out_p.write_text(html_content, encoding="utf-8")
+
