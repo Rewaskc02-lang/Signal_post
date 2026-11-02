@@ -140,6 +140,64 @@ def test_latest_accounting_year_disagreement():
     assert "2024" in summary
 
 
+def test_revenue_trend_requires_matching_fiscal_year_end():
+    """Different fiscal year-end dates are not treated as comparable annual periods."""
+    facts = [
+        CompanyFact(
+            field_name="revenue",
+            value=3000000.0,
+            unit="NOK",
+            as_of=date(2024, 12, 31),
+            source_name="Regnskapsregisteret",
+            source_url="https://api.test/regnskap",
+        ),
+        CompanyFact(
+            field_name="revenue",
+            value=2500000.0,
+            unit="NOK",
+            as_of=date(2023, 6, 30),
+            source_name="Regnskapsregisteret",
+            source_url="https://api.test/regnskap",
+        ),
+    ]
+
+    summary = generate_deterministic_summary(CompanyProfile(orgnr="123456789", facts=facts))
+
+    assert "2024" in summary
+    assert "increase from" not in summary
+    assert "down from" not in summary
+
+
+def test_latest_accounting_year_uses_highest_reported_year():
+    """Reconciliation is independent of the order of repeated registry facts."""
+    facts = [
+        CompanyFact(
+            field_name="latest_accounting_year",
+            value="2023",
+            source_name="Enhetsregisteret",
+            source_url="https://api.test/enhet",
+        ),
+        CompanyFact(
+            field_name="latest_accounting_year",
+            value="2025",
+            source_name="Enhetsregisteret",
+            source_url="https://api.test/enhet",
+        ),
+        CompanyFact(
+            field_name="revenue",
+            value=3000000.0,
+            unit="NOK",
+            as_of=date(2024, 12, 31),
+            source_name="Regnskapsregisteret",
+            source_url="https://api.test/regnskap",
+        ),
+    ]
+
+    summary = generate_deterministic_summary(CompanyProfile(orgnr="123456789", facts=facts))
+
+    assert "latest submitted accounts noted as 2025" in summary
+
+
 def test_nested_address_display_in_viewers():
     """Viewers must parse dict business_address and extract city and street properly."""
     facts = [
@@ -414,9 +472,16 @@ def test_summary_multi_source_evidence_attribution():
     synth_claim_with_fin = next(c for c in envelope_with_fin["claims"] if c.get("field") == "executive_summary")
     # Must reference both Enhetsregisteret and Regnskapsregisteret evidence IDs
     assert len(synth_claim_with_fin["evidence_ids"]) >= 2
-    # Source URL must include both registry references
-    assert enhet_url in synth_claim_with_fin["source_url"]
-    assert regnskap_url in synth_claim_with_fin["source_url"]
+    # Keep one valid source URL on the claim; all supporting sources are
+    # represented by the linked evidence IDs.
+    assert synth_claim_with_fin["source_url"] in {enhet_url, regnskap_url}
+    linked_urls = {
+        evidence["source_url"]
+        for evidence in envelope_with_fin["evidence"]
+        if evidence["id"] in synth_claim_with_fin["evidence_ids"]
+    }
+    assert {enhet_url, regnskap_url}.issubset(linked_urls)
+    assert ";" not in synth_claim_with_fin["source_url"]
 
 
 def test_missing_status_not_defaulted_to_active():
@@ -752,4 +817,3 @@ def test_news_search_requires_company_name():
     news_related = [f for f in facts_related if f.field_name == "latest_news_title"]
     assert len(news_related) == 1
     assert "Eccera Nordic Holding" in news_related[0].value
-

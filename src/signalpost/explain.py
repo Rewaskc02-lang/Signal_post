@@ -238,6 +238,8 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
                 and isinstance(latest_rev_fact.value, (int, float))
                 and isinstance(prev_rev_fact.value, (int, float))
                 and prev_date.year == latest_date.year - 1
+                and prev_date.month == latest_date.month
+                and prev_date.day == latest_date.day
             ):
                 curr_v = float(latest_rev_fact.value)
                 prev_v = float(prev_rev_fact.value)
@@ -254,7 +256,13 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
 
     # Check latest_accounting_year reconciliation
     latest_acc_facts = facts_by_field.get("latest_accounting_year", [])
-    acc_year_val = str(latest_acc_facts[0].value).strip() if latest_acc_facts and latest_acc_facts[0].value else ""
+    accounting_years: list[int] = []
+    for accounting_fact in latest_acc_facts:
+        try:
+            accounting_years.append(int(str(accounting_fact.value).strip()))
+        except (TypeError, ValueError):
+            continue
+    acc_year_val = str(max(accounting_years)) if accounting_years else ""
 
     sentence_3_parts = []
     if emp_clause:

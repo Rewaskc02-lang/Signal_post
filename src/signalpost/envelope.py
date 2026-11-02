@@ -451,11 +451,11 @@ def build_terminal_envelope(
             if not summary_ev_ids and evidence_list:
                 summary_ev_ids = [evidence_list[0]["id"]]
 
-            summary_source_url = f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}"
-            if len(summary_ev_ids) > 1:
-                regnskap_urls = [ev["source_url"] for ev in evidence_list if "regnskap" in ev["source_url"].lower()]
-                if regnskap_urls:
-                    summary_source_url = f"{summary_source_url} ; {regnskap_urls[0]}"
+            summary_source_url = (
+                evidence_list[0]["source_url"]
+                if summary_ev_ids and evidence_list
+                else f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}"
+            )
 
             claims.append({
                 "field": "executive_summary",
