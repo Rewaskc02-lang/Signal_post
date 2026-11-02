@@ -105,6 +105,19 @@ def extract_job_facts(
 
     # 1. Discover careers URL
     careers_url = find_careers_url(page_content, page_url)
+
+    # Guard: only keep careers URLs that belong to the company's own domain.
+    # This prevents false-positive hiring signals from third-party portals
+    # (e.g. karriere.solibo.no appearing on a borettslag's management page).
+    if careers_url:
+        def _root_domain(url: str) -> str:
+            host = urllib.parse.urlparse(url).netloc.lower().split(":")[0]
+            parts = host.split(".")
+            return ".".join(parts[-2:]) if len(parts) >= 2 else host
+
+        if _root_domain(careers_url) != _root_domain(page_url):
+            careers_url = None  # third-party site – discard
+
     if careers_url:
         facts.append(
             CompanyFact(
