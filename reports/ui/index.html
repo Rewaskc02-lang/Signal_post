@@ -146,6 +146,10 @@
     .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
     select{background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:8px;padding:8px;margin-left:6px}
     select:focus{outline:2px solid var(--gold);outline-offset:2px}
+    .compare-bar{display:none;align-items:center;justify-content:space-between;gap:12px;background:var(--plum-surface);border:1px solid var(--gold-border);border-radius:8px;padding:10px 12px;margin-bottom:16px}
+    .compare-bar.visible{display:flex}.compare-bar button{background:var(--gold);border:0;border-radius:6px;padding:8px 12px;font-weight:700;cursor:pointer}
+    .compare-panel{display:none;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:16px;margin-bottom:16px;overflow:auto}
+    .compare-panel.visible{display:block}.compare-panel table{min-width:520px}
 
     /* ─── Footer ──────────────────────────────────────────────── */
     footer{margin-top:40px;text-align:center;font-size:.78rem;color:var(--text-muted)}
@@ -173,6 +177,11 @@
         <path d="M2 12l10 5 10-5"/>
       </svg>
     </div>
+    <div id="compareBar" class="compare-bar" role="status">
+      <span id="compareCount">0 profiles selected</span>
+      <button id="compareButton" type="button">Compare selected</button>
+    </div>
+    <div id="comparePanel" class="compare-panel" aria-live="polite"></div>
     <div>
       <h1>Signalpost <span>C300</span></h1>
       <p>Norwegian company intelligence profiles</p>
@@ -211,7 +220,7 @@
   <!-- Table -->
   <div class="table-wrap">
     <table>
-      <thead><tr><th>#</th><th>Company</th><th>Org Nr</th><th>Status</th><th></th></tr></thead>
+      <thead><tr><th>Select</th><th>#</th><th>Company</th><th>Org Nr</th><th>Status</th><th></th></tr></thead>
       <tbody id="tbody"></tbody>
     </table>
     <div class="empty" id="empty" style="display:none">No profiles match your search.</div>
@@ -228,6 +237,10 @@
   const input = document.getElementById('q');
   const stateFilter = document.getElementById('stateFilter');
   const categoryFilter = document.getElementById('categoryFilter');
+  const compareBar = document.getElementById('compareBar');
+  const compareCount = document.getElementById('compareCount');
+  const comparePanel = document.getElementById('comparePanel');
+  const selected = new Set();
   const empty = document.getElementById('empty');
   let profiles = [];
 
@@ -284,6 +297,7 @@
       if(st === 'available') badgeCls = 'badge-ok';
       else if(st === 'failed' || st === 'error') badgeCls = 'badge-err';
       return `<tr>
+        <td><input type="checkbox" class="compare-check" data-orgnr="${esc(p.orgnr)}" ${selected.has(p.orgnr) ? 'checked' : ''} aria-label="Select ${esc(p.name)} for comparison"></td>
         <td style="color:var(--text-muted);font-size:.78rem">${i+1}</td>
         <td class="name">${esc(p.name)}</td>
         <td class="orgnr">${p.orgnr}</td>
@@ -296,6 +310,22 @@
   input.addEventListener('input', render);
   stateFilter.addEventListener('change', render);
   categoryFilter.addEventListener('change', render);
+  tbody.addEventListener('change', event => {
+    if (!event.target.classList.contains('compare-check')) return;
+    const orgnr = event.target.dataset.orgnr;
+    if (event.target.checked) selected.add(orgnr); else selected.delete(orgnr);
+    updateCompareBar();
+  });
+  document.getElementById('compareButton').addEventListener('click', () => {
+    const chosen = profiles.filter(p => selected.has(p.orgnr));
+    if (chosen.length < 2) { comparePanel.innerHTML = '<p class="empty">Select at least two profiles to compare.</p>'; comparePanel.classList.add('visible'); return; }
+    comparePanel.innerHTML = `<table><thead><tr><th>Fact</th>${chosen.map(p => `<th>${esc(p.name)}<br><small>${esc(p.orgnr)}</small></th>`).join('')}</tr></thead><tbody>${['state','city','industry'].map(field => `<tr><th>${field}</th>${chosen.map(p => `<td>${esc(p[field] || 'Not reported')}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+    comparePanel.classList.add('visible');
+  });
+  function updateCompareBar() {
+    compareCount.textContent = `${selected.size} profile${selected.size === 1 ? '' : 's'} selected`;
+    compareBar.classList.toggle('visible', selected.size > 0);
+  }
 
   function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 })();

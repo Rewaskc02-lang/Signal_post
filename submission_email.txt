@@ -37,8 +37,10 @@ Models / APIs / licences:
 - Official Registries: Brønnøysundregistrene open REST APIs (Enhetsregisteret, Regnskapsregisteret, Roller) licensed under NLOD / CC BY 4.0 (Free, no API key required).
 - Summary Model: gemini-2.5-flash / gpt-4o-mini with built-in zero-cost deterministic template fallback (zero fabricated figures).
 
-Expected cost per official run:
-$0.00 USD (deterministic / standard) / $0.024 USD (with LLM summary)
+Measured representative run:
+10 companies, 32 outbound requests, 5.79 seconds, $0.00 USD with deterministic summaries.
+The recorded 100-company smoke run reports 316 outbound requests. No unmeasured
+1,000-company projection is presented as an observed result.
 
 Contact for results:
 Rewas (GitHub: @Rewaskc02-lang)
@@ -84,6 +86,9 @@ CRITICAL EVALUATION HARDENING & NEW CAPABILITIES
 
 Full documentation is available in SUBMISSION.md on main:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/SUBMISSION.md
+
+Rerun-readiness measurements:
+https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/rerun_readiness_report.md
 
 Thank you for your review and support!
 

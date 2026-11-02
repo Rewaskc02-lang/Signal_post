@@ -73,13 +73,13 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 
 | Scope | Ingestion Requests | Wall-Clock Time | Registry Cost (Brreg) | LLM Summary Cost | Total Run Cost |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| **100 Companies (Official Smoke Test)** | **316 requests** | **~12.9 min** | **$0.00** (Free API) | **$0.000** *(or $0.024 with LLM)* | **$0.00 USD** *(or $0.024 USD)* |
-| **1,000 Companies (Batch Evaluation)** | **~1,850 requests** | **~35 min** | **$0.00** (Free API) | **$0.000** *(or $0.241 with LLM)* | **$0.00 USD** *(or $0.241 USD)* |
+| **100 Companies (recorded smoke run)** | **316 requests** | **Recorded in run report** | **$0.00** (Free API) | **$0.000** deterministic | **$0.00 USD** |
+| **10 Companies (measured representative run)** | **32 requests** | **5.79s** | **$0.00** (Free API) | **$0.000** deterministic | **$0.00 USD** |
 
 - **Strict Challenge Budget Compliance**:
-  - Request Limit: Under 2,000 requests (strictly compliant with daily cap).
-  - Time Limit: Well under 2,400s (40 minutes) cap.
-  - Total Declared Cost: **$0.00 USD** (deterministic) / **$0.24 USD** (with LLM), far below the $10.00 cap.
+  - Request Limit: The recorded 100-company run used 316 requests; the 10-company measured run used 32. The 1,000-company estimate is not claimed as measured.
+  - Time Limit: The recorded 100-company run and measured 10-company run completed within the configured cap.
+  - Total Declared Cost: **$0.00 USD** with deterministic summaries.
 
 ---
 
