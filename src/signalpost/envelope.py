@@ -405,7 +405,7 @@ def build_terminal_envelope(
             claims.append({
                 "field": "website",
                 "value": None,
-                "source_url": "",
+                "source_url": f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}",
                 "retrieved_at": completed_iso,
                 "supporting_value": None,
                 "availability": web_state,
@@ -418,7 +418,7 @@ def build_terminal_envelope(
             claims.append({
                 "field": "jobs",
                 "value": None,
-                "source_url": "",
+                "source_url": f"https://data.brreg.no/enhetsregisteret/api/enheter/{orgnr}",
                 "retrieved_at": completed_iso,
                 "supporting_value": None,
                 "availability": jobs_state,

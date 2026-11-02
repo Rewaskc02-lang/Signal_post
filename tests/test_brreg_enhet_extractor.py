@@ -100,7 +100,7 @@ def test_extract_enhet_facts_sparse() -> None:
     assert len(facts) == 3
     assert facts_by_field["legal_name"].value == "MINIMAL ENK"
     assert facts_by_field["vat_registered"].value is False
-    assert facts_by_field["status"].value == "active"
+    assert facts_by_field["status"].value == "not_reported"
     assert "website" not in facts_by_field
     assert "employee_count" not in facts_by_field
 
@@ -132,7 +132,7 @@ def test_determine_status() -> None:
     assert determine_status({"konkurs": True}) == "bankrupt"
     assert determine_status({"underAvvikling": True}) == "under_liquidation"
     assert determine_status({"underTvangsavviklingEllerTvangsopplosning": True}) == "under_liquidation"
-    assert determine_status({}) == "active"
+    assert determine_status({}) == "not_reported"
 
 
 def test_format_address() -> None:

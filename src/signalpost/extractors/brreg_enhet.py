@@ -40,6 +40,14 @@ def format_address(addr: dict[str, Any] | None) -> dict[str, Any] | None:
 
 def determine_status(raw: dict[str, Any]) -> str:
     """Determine the current legal status of the entity."""
+    status_fields = (
+        "slettedato",
+        "konkurs",
+        "underAvvikling",
+        "underTvangsavviklingEllerTvangsopplosning",
+    )
+    if not any(field in raw for field in status_fields):
+        return "not_reported"
     if raw.get("slettedato") is not None:
         return "deleted"
     if raw.get("konkurs", False) is True:
