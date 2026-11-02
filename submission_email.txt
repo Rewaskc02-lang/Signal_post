@@ -16,19 +16,19 @@ Repository URL:
 https://github.com/Rewaskc02-lang/Signal_post
 
 Exact commit hash:
-6d5b2c4 (or latest HEAD on main)
+4d01524d86ec94cc3b518305ae0bb36c67e897ad
 
 100-company smoke-test report URL:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/100_company_smoke_test_report.md
 
 Interactive visual dashboard:
-https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/smoke_test_dashboard.html
+https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/ui/index.html
 
 Clean install step (single command):
 pip install -r requirements.txt
 
 One-command run instruction (strictly within the 2,000 daily request cap):
-python run.py --input orgnumbers.txt --output profiles/ --max-requests 2000 --max-seconds 2400
+python run.py --input <builderr-supplied-company-file> --output /tmp/signalpost-run/ --max-requests 2000 --max-seconds 2400
 
 Human-readable inspection mode (UX score):
 python run.py --view 923609016
@@ -76,10 +76,11 @@ CRITICAL EVALUATION HARDENING & NEW CAPABILITIES
 
 6. Enhanced Usability & UX Verification:
    - Added CLI formatted profile view: 'python run.py --view <orgnr>' for instant human inspection of facts, evidence digests, and reconciliation diffs.
-   - Added interactive HTML evaluation dashboard generator: 'python scripts/generate_report.py' (reports/smoke_test_dashboard.html) for search, comparison, and raw snapshot inspection on desktop and mobile.
+   - Added browsable profile UI at 'reports/ui/index.html' with corrected manifest metadata, city/industry search, status/category filters, readable profile pages, source links, and SHA-256 evidence.
+   - Regenerate its manifest with 'python scripts/generate_ui_manifest.py --profiles profiles/ --output reports/ui/profiles_index.json'.
 
 7. Test Suite Status:
-   - 118 / 118 automated unit and integration tests passing cleanly (100% pass rate in 3.40s).
+   - 125 / 125 automated unit and integration tests passing cleanly.
 
 Full documentation is available in SUBMISSION.md on main:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/SUBMISSION.md

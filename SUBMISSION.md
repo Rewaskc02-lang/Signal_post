@@ -2,10 +2,10 @@
 
 ## Repository Information
 - **Repository URL**: `https://github.com/Rewaskc02-lang/Signal_post`
-- **Commit Hash**: `6d5b2c4` (latest HEAD on `main`)
+- **Commit Hash**: `4d01524d86ec94cc3b518305ae0bb36c67e897ad`
 - **Language & Runtime**: Python 3.11+
 - **100-Company Smoke Test Report**: [`reports/100_company_smoke_test_report.md`](https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/100_company_smoke_test_report.md)
-- **Interactive Visual Dashboard**: [`reports/smoke_test_dashboard.html`](https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/smoke_test_dashboard.html)
+- **Interactive Visual Dashboard**: [`reports/ui/index.html`](https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/ui/index.html)
 
 ---
 
@@ -19,9 +19,9 @@ pip install -r requirements.txt
 
 ### 2. Batch Execution Command (Official Evaluation Run)
 ```bash
-python run.py --input orgnumbers.txt --output profiles/ --max-requests 2000 --max-seconds 2400
+python run.py --input <builderr-supplied-company-file> --output /tmp/signalpost-run/ --max-requests 2000 --max-seconds 2400
 ```
-*Accepts `--input` (or `--organisations`) pointing to a `.txt`, `.json`, or `.jsonl` file. Emits exactly one JSON terminal envelope per input company directly to `stdout` (JSONL stream) and saves `envelopes.jsonl` (and `{orgnr}.json` profiles) to the output path. Strictly stays within the Unstop/Builderr 2,000-request daily cap.*
+*The evaluator supplies the company file through `--input`; local testing can use `orgnumbers.txt`. Accepts `.txt`, `.json`, or `.jsonl`, preserves input order in the stdout JSONL stream, and writes to a temporary output directory so existing artifacts are not overwritten.*
 
 ### 3. Human-Readable Profile Inspection Mode (UX Evaluation)
 ```bash
@@ -31,9 +31,9 @@ python run.py --view 923609016
 
 ### 4. Interactive HTML Dashboard Generation (Browser UX Evaluation)
 ```bash
-python scripts/generate_report.py --input envelopes.jsonl --output reports/report.html
+python scripts/generate_ui_manifest.py --profiles profiles/ --output reports/ui/profiles_index.json
 ```
-*Generates a self-contained, responsive HTML verification dashboard for judges to search, compare facts, inspect raw HTTP snapshots, and audit SHA-256 digests offline.*
+*The generated `reports/ui/index.html` dashboard supports company/org-number/city/industry search, status/category filters, and readable profile pages with source links and SHA-256 evidence.*
 
 ---
 
