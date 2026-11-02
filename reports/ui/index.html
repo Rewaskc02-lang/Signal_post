@@ -143,6 +143,9 @@
     .badge-err{background:rgba(248,113,113,.12);color:#f87171;border:1px solid rgba(248,113,113,.35)}
 
     .empty{text-align:center;padding:60px 20px;color:var(--text-muted);font-size:.95rem}
+    .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    select{background:var(--bg-card);color:var(--text-primary);border:1px solid var(--border);border-radius:8px;padding:8px;margin-left:6px}
+    select:focus{outline:2px solid var(--gold);outline-offset:2px}
 
     /* ─── Footer ──────────────────────────────────────────────── */
     footer{margin-top:40px;text-align:center;font-size:.78rem;color:var(--text-muted)}
@@ -189,7 +192,20 @@
     <span class="icon">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
     </span>
-    <input type="text" id="q" placeholder="Search by company name or org number…" autocomplete="off">
+    <label for="q" class="sr-only">Search profiles</label>
+    <input type="search" id="q" placeholder="Search by company name, org number, city, or industry…" autocomplete="off">
+  </div>
+  <div style="display:flex;gap:12px;flex-wrap:wrap;margin-bottom:24px">
+    <label>Status
+      <select id="stateFilter" aria-label="Filter by availability">
+        <option value="">All statuses</option><option value="available">Available</option><option value="failed">Failed</option>
+      </select>
+    </label>
+    <label>Category
+      <select id="categoryFilter" aria-label="Filter by research category">
+        <option value="">All categories</option>
+      </select>
+    </label>
   </div>
 
   <!-- Table -->
@@ -210,13 +226,21 @@
 (function(){
   const tbody = document.getElementById('tbody');
   const input = document.getElementById('q');
+  const stateFilter = document.getElementById('stateFilter');
+  const categoryFilter = document.getElementById('categoryFilter');
   const empty = document.getElementById('empty');
   let profiles = [];
 
   // Load manifest
   fetch('profiles_index.json')
     .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
-    .then(data => { profiles = data; computeStats(); render(); })
+    .then(data => {
+      profiles = data;
+      [...new Set(profiles.flatMap(p => p.categories || []))].sort().forEach(category => {
+        categoryFilter.insertAdjacentHTML('beforeend', `<option value="${esc(category)}">${esc(category)}</option>`);
+      });
+      computeStats(); render();
+    })
     .catch(() => {
       // Fallback: try loading individual profile files list
       empty.style.display = '';
@@ -238,10 +262,14 @@
 
   function render(){
     const term = input.value.toLowerCase().trim();
+    const state = stateFilter.value;
+    const category = categoryFilter.value;
     const filtered = profiles.filter(p =>
       (p.name||'').toLowerCase().includes(term) ||
-      (p.orgnr||'').toString().includes(term)
-    );
+      (p.orgnr||'').toString().includes(term) ||
+      (p.city||'').toLowerCase().includes(term) ||
+      (p.industry||'').toLowerCase().includes(term)
+    ).filter(p => (!state || p.state === state) && (!category || (p.categories || []).includes(category)));
     if(filtered.length === 0){
       tbody.innerHTML = '';
       empty.style.display = '';
@@ -260,12 +288,14 @@
         <td class="name">${esc(p.name)}</td>
         <td class="orgnr">${p.orgnr}</td>
         <td><span class="badge ${badgeCls}">${badgeLabel}</span></td>
-        <td style="text-align:right"><a class="view-link" href="${p.file}" target="_blank">View</a></td>
+        <td style="text-align:right"><a class="view-link" href="${p.profile_url}" target="_blank">View profile</a></td>
       </tr>`;
     }).join('');
   }
 
   input.addEventListener('input', render);
+  stateFilter.addEventListener('change', render);
+  categoryFilter.addEventListener('change', render);
 
   function esc(s){ const d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 })();

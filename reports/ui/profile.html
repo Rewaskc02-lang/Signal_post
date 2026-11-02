@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Signalpost profile</title>
+  <style>
+    :root{color-scheme:dark;--bg:#090a0f;--surface:#141926;--plum:#3a0f34;--gold:#eaaa00;--text:#dde3e8;--muted:#9aa5b5;--border:rgba(221,227,232,.16)}
+    *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.55 system-ui,sans-serif}
+    main{max-width:980px;margin:0 auto;padding:24px 16px 64px}a{color:var(--gold)}
+    .back{display:inline-block;margin-bottom:20px}.hero,.section{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:20px;margin-bottom:16px}
+    h1{margin:0 0 4px;font-size:clamp(1.4rem,4vw,2rem)}h2{font-size:1.05rem;margin:0 0 12px;color:var(--gold)}
+    .meta{color:var(--muted);overflow-wrap:anywhere}.status{display:inline-block;background:var(--plum);border:1px solid var(--gold);border-radius:999px;padding:2px 9px;margin-left:8px;font-size:.78rem}
+    dl{display:grid;grid-template-columns:minmax(9rem, .35fr) 1fr;gap:8px 18px;margin:0}dt{color:var(--muted)}dd{margin:0;overflow-wrap:anywhere}
+    .evidence{border-top:1px solid var(--border);padding:10px 0}.evidence:first-child{border-top:0}.hash{font:12px ui-monospace,monospace;color:var(--muted);word-break:break-all}
+    .error{color:#fca5a5}.empty{color:var(--muted)}@media(max-width:560px){dl{grid-template-columns:1fr}.hero,.section{padding:16px}}
+  </style>
+</head>
+<body>
+<main id="app"><p class="empty">Loading profile…</p></main>
+<script>
+(async function () {
+  const app = document.getElementById('app');
+  const file = new URLSearchParams(location.search).get('file');
+  if (!file) { app.innerHTML = '<p class="error">No profile was selected.</p>'; return; }
+  try {
+    const profile = await fetch(file).then(r => { if (!r.ok) throw new Error(r.status); return r.json(); });
+    const facts = Array.isArray(profile.facts) ? profile.facts : [];
+    const value = name => { const f = facts.find(item => item.field_name === name); return f ? f.value : null; };
+    const esc = value => String(value ?? 'Not reported').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const factRows = facts.map(f => `<div class="evidence"><dl><dt>${esc(f.field_name)}</dt><dd>${esc(typeof f.value === 'object' ? JSON.stringify(f.value) : f.value)}<br><span class="meta">${esc(f.source_name)} · retrieved ${esc(f.retrieved_at)}${f.as_of ? ` · period ${esc(f.as_of)}` : ''}</span><br>${f.source_url ? `<a href="${esc(f.source_url)}" target="_blank" rel="noopener noreferrer">Open source</a>` : '<span class="empty">No source URL recorded</span>'}${f.content_hash ? ` · <span class="hash">SHA-256 ${esc(f.content_hash)}</span>` : ''}</dd></dl></div>`).join('');
+    app.innerHTML = `<a class="back" href="index.html">← Back to profiles</a>
+      <section class="hero"><h1>${esc(value('legal_name') || `Organisation ${profile.orgnr}`)}<span class="status">available</span></h1>
+      <div class="meta">Organisation number: ${esc(profile.orgnr)} · Last checked: ${esc(profile.last_checked)}</div></section>
+      <section class="section"><h2>Verified facts</h2>${factRows || '<p class="empty">No facts were available.</p>'}</section>
+      <section class="section"><h2>Source status</h2><dl>${Object.entries(profile.source_statuses || {}).map(([k,v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('') || '<dd class="empty">No source status recorded.</dd>'}</dl></section>`;
+  } catch (error) {
+    app.innerHTML = `<p class="error">Could not load this profile: ${esc(error.message || error)}</p>`;
+  }
+})();
+</script>
+</body>
+</html>
