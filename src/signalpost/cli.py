@@ -226,8 +226,6 @@ async def process_single_orgnr(
             error=budget.halt_reason or "Budget exhausted",
             terminal_state="budget_exhausted",
         )
-        sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-        sys.stdout.flush()
         return None, None, envelope
 
     # 2. Validation check
@@ -246,8 +244,6 @@ async def process_single_orgnr(
             error="Invalid Norwegian organisation number format or checksum",
             terminal_state="failed",
         )
-        sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-        sys.stdout.flush()
         return None, None, envelope
 
     reqs_before = budget.request_count
@@ -264,8 +260,6 @@ async def process_single_orgnr(
                 error=budget.halt_reason or "Budget exhausted",
                 terminal_state="budget_exhausted",
             )
-            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
             return None, None, envelope
 
         try:
@@ -345,9 +339,6 @@ async def process_single_orgnr(
                 terminal_state="available",
                 snapshots=org_snapshots,
             )
-            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
-
             if not quiet:
                 status_str = f"new={diff_summary.new_count}, changed={diff_summary.changed_count}, confirmed={diff_summary.confirmed_count}"
                 sys.stderr.write(f"✓ [{cleaned_orgnr}] Complete ({len(updated_profile.facts)} facts, {status_str})\n")
@@ -367,8 +358,6 @@ async def process_single_orgnr(
                 error=budget.halt_reason or "Budget exhausted",
                 terminal_state="failed",
             )
-            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
             return None, None, envelope
 
         except NotFoundError:
@@ -387,8 +376,6 @@ async def process_single_orgnr(
                 error="Organisasjonsnummer not found in Enhetsregisteret (404)",
                 terminal_state="not_available",
             )
-            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
             return None, None, envelope
 
         except Exception as exc:
@@ -407,8 +394,6 @@ async def process_single_orgnr(
                 error=str(exc),
                 terminal_state="failed",
             )
-            sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
             return None, None, envelope
 
 
@@ -497,8 +482,12 @@ async def run_pipeline(
                 terminal_state="failed",
             )
             envelopes.append(fallback_envelope)
-            sys.stdout.write(json.dumps(fallback_envelope, ensure_ascii=False) + "\n")
-            sys.stdout.flush()
+
+    # Emit exactly one terminal envelope per input in input order. Worker-level
+    # emission would expose asynchronous completion order to the evaluator.
+    for envelope in envelopes:
+        sys.stdout.write(json.dumps(envelope, ensure_ascii=False) + "\n")
+    sys.stdout.flush()
 
     # Write envelopes to file targets
     target_files: list[Path] = []
