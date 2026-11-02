@@ -235,6 +235,11 @@ def build_terminal_envelope(
     }
 
     if profile is not None and not error:
+        # Guarantee every valid profile has a populated plain-English executive summary
+        if not profile.executive_summary:
+            from signalpost.explain import generate_deterministic_summary
+            profile.executive_summary = generate_deterministic_summary(profile)
+
         # Determine presence of facts per category
         has_financials = any(
             f.field_name in {"revenue", "operating_result", "ordinary_result_before_tax", "equity", "net_income", "annual_net_result", "total_assets", "total_debt"}

@@ -185,6 +185,7 @@ async def build_profile(
         if enable_website_enrichment:
             website_val = next((f.value for f in enhet_facts if f.field_name == "website"), None)
             legal_name_val = next((f.value for f in enhet_facts if f.field_name == "legal_name"), "")
+            org_form_val = next((str(f.value) for f in enhet_facts if f.field_name in {"org_form_code", "org_form_description"}), "")
 
             if website_val and isinstance(website_val, str):
                 enrichment_facts, web_status = await enrich_from_website_with_status(
@@ -193,6 +194,7 @@ async def build_profile(
                     legal_name=legal_name_val,
                     client=brreg_client._client,
                     brreg_client=brreg_client,
+                    org_form=org_form_val,
                 )
                 source_statuses["website"] = web_status
                 all_facts.extend(enrichment_facts)

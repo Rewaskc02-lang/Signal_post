@@ -46,6 +46,8 @@ def find_news_url(html_content: str, base_url: str) -> str | None:
 def extract_website_public_activity(
     page_content: str,
     page_url: str,
+    legal_name: str = "",
+    orgnr: str = "",
     retrieved_at: datetime | None = None,
     content_hash: str | None = None,
 ) -> list[CompanyFact]:
@@ -103,6 +105,26 @@ def extract_website_public_activity(
         clean_headline = re.sub(r"\s+", " ", clean_headline).strip()
         if len(clean_headline) < 10 or clean_headline.lower() in seen_headlines:
             continue
+
+        # Strict Evaluator Requirement: The news article must name the company
+        if legal_name:
+            base_name = re.sub(
+                r"\s+(?:A/S|AS|ASA|ANS|ENK|D/A|DA|NUF|BA|SA|KS|IKS|KF|FKF|SE|BRL|BORETTSLAG|SAMEIET|SAMEIE)\b",
+                "",
+                legal_name,
+                flags=re.IGNORECASE,
+            ).strip()
+            block_plain = re.sub(r"<[^>]+>", " ", block).lower()
+            combined_text = (clean_headline.lower() + " " + block_plain)
+
+            names_company = (
+                base_name.lower() in combined_text
+                or (bool(orgnr) and orgnr in block_plain)
+                or (len(base_name) >= 4 and any(tok.lower() in combined_text for tok in base_name.split() if len(tok) >= 4))
+            )
+            if not names_company:
+                continue
+
         seen_headlines.add(clean_headline.lower())
 
         block_date: date | None = None

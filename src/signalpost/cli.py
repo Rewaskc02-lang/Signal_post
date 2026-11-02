@@ -518,6 +518,18 @@ async def run_pipeline(
             for env in envelopes:
                 f.write(json.dumps(env, ensure_ascii=False) + "\n")
 
+    # Automatically generate self-contained visual dashboard for human evaluation & inspection
+    if output_dir is not None and not str(output_dir).endswith(".jsonl"):
+        try:
+            from signalpost.viewer import generate_html_report
+            dashboard_file = output_dir / "index.html"
+            generate_html_report(envelopes, dashboard_file)
+            if not quiet:
+                sys.stderr.write(f"\n📊 Interactive visual dashboard generated: {dashboard_file}\n")
+        except Exception as e:
+            if not quiet:
+                sys.stderr.write(f"Note: HTML dashboard generation skipped: {e}\n")
+
     elapsed = budget.elapsed_seconds
     comp = budget.completed_count
     fail = budget.failed_count

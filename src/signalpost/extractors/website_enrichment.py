@@ -43,6 +43,19 @@ PARKED_DOMAIN_PATTERNS = [
     "under construction",
 ]
 
+PROPERTY_MANAGER_PORTALS = [
+    "usbl.no",
+    "solibo.no",
+    "obos.no",
+    "vestbo.no",
+    "bonord.no",
+    "bbl.no",
+    "noblbl.no",
+    "kredinor.no",
+    "styrerommet.no",
+    "vibbo.no",
+]
+
 
 def normalize_url(url: str) -> str:
     """Ensure URL has an HTTP/HTTPS scheme."""
@@ -144,6 +157,22 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
 
     # 1. Flexible 3-digit grouped orgnr pattern (matches any spaces, dots, hyphens between 3-digit blocks)
     flexible_pattern = rf"\b{cleaned_orgnr[:3]}[\s.-]*{cleaned_orgnr[3:6]}[\s.-]*{cleaned_orgnr[6:]}\b"
+
+    # Guard against property manager portals attributing manager sites to housing associations
+    clean_dom = clean_website_domain(domain) if domain else ""
+    is_portal = any(clean_dom == p or clean_dom.endswith(f".{p}") for p in PROPERTY_MANAGER_PORTALS)
+    if is_portal:
+        # A property manager portal (e.g. usbl.no, solibo.no) MUST have the housing association's 9-digit orgnr
+        # or exact full legal name on the specific page to prove an official entity profile exists
+        has_orgnr = bool(
+            cleaned_orgnr in page_content
+            or cleaned_orgnr in plain_text
+            or cleaned_orgnr in collapsed_plain
+            or re.search(flexible_pattern, page_content)
+        )
+        has_exact_name = bool(legal_name and normalize_text_for_matching(legal_name) in normalize_text_for_matching(plain_text))
+        return has_orgnr or has_exact_name
+
     if re.search(flexible_pattern, page_content) or re.search(flexible_pattern, plain_text) or re.search(flexible_pattern, collapsed_plain):
         return True
 
@@ -189,9 +218,9 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
     dom_token_alphanum = re.sub(r"[^a-z0-9]", "", dom_token.lower())
 
     # 7. Check for base company name with expanded Norwegian corporate suffixes
-    # AS, ASA, A/S, ANS, ENK, DA, D/A, NUF, BA, SA, KS, IKS, KF, FKF, SE
+    # AS, ASA, A/S, ANS, ENK, DA, D/A, NUF, BA, SA, KS, IKS, KF, FKF, SE, BRL, Borettslag, Sameie
     base_name = re.sub(
-        r"\s+(?:A/S|AS|ASA|ANS|ENK|D/A|DA|NUF|BA|SA|KS|IKS|KF|FKF|SE)\b",
+        r"\s+(?:A/S|AS|ASA|ANS|ENK|D/A|DA|NUF|BA|SA|KS|IKS|KF|FKF|SE|BRL|BORETTSLAG|SAMEIET|SAMEIE)\b",
         "",
         legal_name,
         flags=re.IGNORECASE,
@@ -199,7 +228,7 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
     norm_base = normalize_text_for_matching(base_name)
     norm_base_alphanum = re.sub(r"[^a-z0-9]", "", norm_base)
 
-    if len(norm_base) >= 3 and (norm_base in norm_content or norm_base in norm_plain_content):
+    if len(norm_base) >= 4 and (norm_base in norm_content or norm_base in norm_plain_content):
         if dom_token_alphanum and (
             norm_base_alphanum in dom_token_alphanum
             or dom_token_alphanum.startswith(norm_base_alphanum)
@@ -210,18 +239,7 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
         if norm_base in normalize_text_for_matching(title):
             return True
 
-    # 8. Domain token self-reference check
-    if len(dom_token_alphanum) >= 4 and (dom_token_alphanum in norm_content or dom_token_alphanum in norm_plain_content):
-        return True
-
-    # 9. Page title <-> domain token significant overlap check
-    if dom_token_alphanum and len(dom_token_alphanum) >= 4:
-        title = extract_page_title(page_content) or ""
-        norm_title_alphanum = re.sub(r"[^a-z0-9]", "", normalize_text_for_matching(title))
-        if dom_token_alphanum in norm_title_alphanum or norm_title_alphanum.startswith(dom_token_alphanum[:5]):
-            return True
-
-    # 10. Hyphenated name segment check
+    # 8. Hyphenated name segment check
     if " - " in legal_name:
         for segment in legal_name.split(" - "):
             seg_alphanum = re.sub(r"[^a-z0-9]", "", segment.strip().lower())
@@ -316,6 +334,155 @@ def extract_investor_url(html_str: str, base_url: str) -> str | None:
     return None
 
 
+def extract_social_links(
+    html_content: str,
+    page_url: str,
+    retrieved_at: datetime | None = None,
+    content_hash: str | None = None,
+) -> list[CompanyFact]:
+    """Extract verified social media profile links from confirmed company website."""
+    if not html_content:
+        return []
+
+    fetch_time = retrieved_at or datetime.now(timezone.utc)
+    raw_hash = content_hash or hashlib.sha256(html_content.encode("utf-8")).hexdigest()
+    facts: list[CompanyFact] = []
+
+    # Look for href links pointing to official social platforms
+    links = re.findall(r'<a\s+[^>]*?href=["\']([^"\']+)["\']', html_content, re.IGNORECASE)
+
+    seen_platforms: set[str] = set()
+    for raw_href in links:
+        href = raw_href.strip()
+        parsed = urllib.parse.urlparse(href)
+        netloc = parsed.netloc.lower()
+        if netloc.startswith("www."):
+            netloc = netloc[4:]
+        path = parsed.path.strip("/")
+
+        # 1. LinkedIn (company or school profile, ignore generic sharers)
+        if "linkedin.com" in netloc and "linkedin_url" not in seen_platforms:
+            if "share" not in path.lower() and "intent" not in path.lower() and len(path) > 3:
+                clean_url = f"https://www.linkedin.com/{path.split('?')[0]}"
+                seen_platforms.add("linkedin_url")
+                facts.append(
+                    CompanyFact(
+                        field_name="linkedin_url",
+                        value=clean_url,
+                        source_name="Company Website",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.95,
+                        content_hash=raw_hash,
+                        extraction_method="html_social_link",
+                    )
+                )
+
+        # 2. Facebook (company page, ignore sharer)
+        elif "facebook.com" in netloc and "facebook_url" not in seen_platforms:
+            if "sharer" not in path.lower() and "dialog" not in path.lower() and "tr?" not in path.lower() and len(path) > 2:
+                clean_url = f"https://www.facebook.com/{path.split('?')[0]}"
+                seen_platforms.add("facebook_url")
+                facts.append(
+                    CompanyFact(
+                        field_name="facebook_url",
+                        value=clean_url,
+                        source_name="Company Website",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.9,
+                        content_hash=raw_hash,
+                        extraction_method="html_social_link",
+                    )
+                )
+
+        # 3. Instagram
+        elif "instagram.com" in netloc and "instagram_url" not in seen_platforms:
+            if len(path) > 2 and not any(p in path.lower() for p in ("explore", "developer", "about", "legal")):
+                clean_url = f"https://www.instagram.com/{path.split('?')[0]}"
+                seen_platforms.add("instagram_url")
+                facts.append(
+                    CompanyFact(
+                        field_name="instagram_url",
+                        value=clean_url,
+                        source_name="Company Website",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.9,
+                        content_hash=raw_hash,
+                        extraction_method="html_social_link",
+                    )
+                )
+
+        # 4. Twitter / X
+        elif ("twitter.com" in netloc or "x.com" in netloc) and "twitter_url" not in seen_platforms:
+            if "intent" not in path.lower() and "share" not in path.lower() and len(path) > 2:
+                clean_url = f"https://x.com/{path.split('?')[0]}"
+                seen_platforms.add("twitter_url")
+                facts.append(
+                    CompanyFact(
+                        field_name="twitter_url",
+                        value=clean_url,
+                        source_name="Company Website",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.9,
+                        content_hash=raw_hash,
+                        extraction_method="html_social_link",
+                    )
+                )
+
+        # 5. YouTube
+        elif "youtube.com" in netloc and "youtube_url" not in seen_platforms:
+            if any(prefix in path.lower() for prefix in ("@", "channel/", "c/", "user/")):
+                clean_url = f"https://www.youtube.com/{path.split('?')[0]}"
+                seen_platforms.add("youtube_url")
+                facts.append(
+                    CompanyFact(
+                        field_name="youtube_url",
+                        value=clean_url,
+                        source_name="Company Website",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.9,
+                        content_hash=raw_hash,
+                        extraction_method="html_social_link",
+                    )
+                )
+
+        # 6. GitHub
+        elif "github.com" in netloc and "github_url" not in seen_platforms:
+            if len(path) > 2 and "/" not in path.strip("/"):
+                clean_url = f"https://github.com/{path.split('?')[0]}"
+                seen_platforms.add("github_url")
+                facts.append(
+                    CompanyFact(
+                        field_name="github_url",
+                        value=clean_url,
+                        source_name="Company Website",
+                        source_url=page_url,
+                        as_of=None,
+                        retrieved_at=fetch_time,
+                        confidence="verified_secondary",
+                        confidence_level=0.95,
+                        content_hash=raw_hash,
+                        extraction_method="html_social_link",
+                    )
+                )
+
+    return facts
+
+
 async def is_url_allowed_by_robots(base_origin: str, target_url: str, user_agent: str, client: httpx.AsyncClient) -> bool:
     """Check robots.txt permissions before crawling."""
     robots_url = urllib.parse.urljoin(base_origin, "/robots.txt")
@@ -340,6 +507,7 @@ async def enrich_from_website_with_status(
     client: httpx.AsyncClient | None = None,
     user_agent: str = DEFAULT_USER_AGENT,
     brreg_client: Any = None,
+    org_form: str = "",
 ) -> tuple[list[CompanyFact], str]:
     """Fetch company website, verify identity proof, and extract secondary facts.
 
@@ -569,19 +737,32 @@ async def enrich_from_website_with_status(
                     )
                 )
 
-            # 7. Jobs & Careers facts from verified company page
+            # 7. Social Links from confirmed website
+            social_facts = extract_social_links(
+                html_content=verified_html,
+                page_url=verified_url,
+                retrieved_at=fetch_time,
+                content_hash=content_hash,
+            )
+            facts.extend(social_facts)
+
+            # 8. Jobs & Careers facts from verified company page
             job_facts = extract_job_facts(
                 page_content=verified_html,
                 page_url=verified_url,
+                legal_name=legal_name,
+                org_form=org_form,
                 retrieved_at=fetch_time,
                 content_hash=content_hash,
             )
             facts.extend(job_facts)
 
-            # 8. Public activity & Press facts from verified company page
+            # 9. Public activity & Press facts from verified company page
             activity_facts = extract_website_public_activity(
                 page_content=verified_html,
                 page_url=verified_url,
+                legal_name=legal_name,
+                orgnr=orgnr,
                 retrieved_at=fetch_time,
                 content_hash=content_hash,
             )

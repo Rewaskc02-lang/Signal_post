@@ -64,9 +64,20 @@ def find_careers_url(html_content: str, base_url: str) -> str | None:
     return None
 
 
+NAV_TERMS = (
+    "se alle", "les mer", "read more", "careers", "karriere", "stillinger",
+    "jobber", "view all", "søk her", "søk stilling", "apply now", "om oss",
+    "kontakt", "kontakt oss", "våre verdier", "vårt team", "ansatte",
+    "ledige stillinger", "open positions", "arbeidsgiver", "personvern",
+    "cookies", "logg inn", "login", "hjem", "home"
+)
+
+
 def extract_job_facts(
     page_content: str,
     page_url: str,
+    legal_name: str = "",
+    org_form: str = "",
     retrieved_at: datetime | None = None,
     content_hash: str | None = None,
 ) -> list[CompanyFact]:
@@ -75,6 +86,14 @@ def extract_job_facts(
     Only called on pages whose identity has already been verified to prevent hallucinations.
     """
     if not page_content:
+        return []
+
+    # Housing associations (Sameie, Borettslag) do not post corporate vacancies
+    is_housing_entity = any(
+        kw in (legal_name + " " + org_form).upper()
+        for kw in ("SAMEIE", "SAMEIET", "BORETTSLAG", "BRL", "SAM")
+    )
+    if is_housing_entity:
         return []
 
     fetch_time = retrieved_at or datetime.now(timezone.utc)
@@ -132,22 +151,6 @@ def extract_job_facts(
         except ValueError:
             pass
 
-    if is_actively_hiring:
-        facts.append(
-            CompanyFact(
-                field_name="hiring_status",
-                value="active_hiring",
-                source_name="Company Careers",
-                source_url=page_url,
-                as_of=None,
-                retrieved_at=fetch_time,
-                confidence="verified_secondary",
-                confidence_level=0.9,
-                content_hash=raw_hash,
-                extraction_method="html_hiring_status",
-            )
-        )
-
     # 3. Extract individual job vacancy titles if listed on the page
     job_link_matches = re.findall(
         r'<a\s+[^>]*?href=["\'][^"\']*(?:job|stilling|karriere|position|vacancy)[^"\']*["\'][^>]*>(.*?)</a>',
@@ -159,7 +162,7 @@ def extract_job_facts(
         clean = re.sub(r"<[^>]+>", " ", raw_title)
         clean = html.unescape(clean)
         clean = re.sub(r"\s+", " ", clean).strip()
-        if len(clean) >= 6 and not any(nav in clean.lower() for nav in ("se alle", "les mer", "read more", "careers", "karriere", "stillinger", "jobber", "view all")):
+        if len(clean) >= 6 and not any(nav in clean.lower() for nav in NAV_TERMS):
             if clean.lower() not in seen_jobs:
                 seen_jobs.add(clean.lower())
                 facts.append(
@@ -176,7 +179,24 @@ def extract_job_facts(
                         extraction_method="html_job_listing",
                     )
                 )
+                is_actively_hiring = True
                 if len(seen_jobs) >= 5:
                     break
+
+    if is_actively_hiring:
+        facts.append(
+            CompanyFact(
+                field_name="hiring_status",
+                value="active_hiring",
+                source_name="Company Careers",
+                source_url=page_url,
+                as_of=None,
+                retrieved_at=fetch_time,
+                confidence="verified_secondary",
+                confidence_level=0.9,
+                content_hash=raw_hash,
+                extraction_method="html_hiring_status",
+            )
+        )
 
     return facts

@@ -34,6 +34,22 @@ if "--view" in sys.argv:
         if "--orgnr" not in sys.argv and "-o" not in sys.argv:
             sys.argv.extend(["--orgnr", val])
 
+# Support instant browser viewing: python run.py --browse
+if "--browse" in sys.argv:
+    import webbrowser
+    html_target = ROOT / "profiles" / "index.html"
+    if not html_target.exists():
+        html_target = ROOT / "reports" / "smoke_test_dashboard.html"
+    if not html_target.exists():
+        html_target = ROOT / "reports" / "report.html"
+    if html_target.exists():
+        webbrowser.open(f"file://{html_target}")
+        sys.stderr.write(f"Opened visual dashboard: file://{html_target}\n")
+        sys.exit(0)
+    else:
+        sys.stderr.write("No dashboard found. Run python run.py --input orgnumbers.txt --output profiles/ first.\n")
+        sys.exit(1)
+
 from signalpost.cli import main
 
 if __name__ == "__main__":

@@ -8,7 +8,9 @@ from signalpost.envelope import build_terminal_envelope, validate_envelope
 from signalpost.explain import generate_deterministic_summary
 from signalpost.extractors.brreg_enhet import extract_enhet_facts
 from signalpost.extractors.brreg_regnskap import extract_regnskap_facts
+from signalpost.extractors.jobs_enrichment import extract_job_facts
 from signalpost.extractors.public_activity import extract_website_public_activity
+from signalpost.extractors.website_enrichment import extract_social_links, is_identity_verified_on_page
 from signalpost.matcher import deduplicate_facts
 from signalpost.models import CompanyFact, CompanyProfile
 from signalpost.viewer import generate_html_report, render_terminal_profile
@@ -541,3 +543,213 @@ def test_financial_differing_currencies_and_unequal_periods_no_false_trend():
     summary_non_consec = generate_deterministic_summary(profile_non_consec)
     assert "increase" not in summary_non_consec.lower()
     assert "down" not in summary_non_consec.lower()
+
+
+def test_housing_association_portal_rejection_and_hiring_exclusion():
+    """Verify that housing association portals (usbl.no, solibo.no) are rejected unless orgnr/name matches,
+    and housing entities never extract corporate hiring signals."""
+    portal_html = """
+    <html>
+      <head><title>USBL Boligbyggelag - Forside</title></head>
+      <body>
+        <h1>Velkommen til USBL</h1>
+        <p>Vi forvalter over 1600 borettslag og sameier over hele landet.</p>
+        <a href="/karriere">Jobb i USBL</a>
+      </body>
+    </html>
+    """
+    # 1. Identity verification must REJECT portal for individual sameie without orgnr
+    is_verified = is_identity_verified_on_page(
+        page_content=portal_html,
+        orgnr="987654321",
+        legal_name="Sameiet Haslum Elvepark Rekkehus",
+        domain="usbl.no",
+    )
+    assert is_verified is False, "Property manager portal must NOT be verified for individual housing association"
+
+    # 2. Even if content were parsed, housing entities must NEVER extract corporate vacancies
+    jobs_sameie = extract_job_facts(
+        page_content="<html><body><h2>Ledige stillinger</h2><a href='/job/1'>Prosjektleder Bolig</a></body></html>",
+        page_url="https://usbl.no/karriere",
+        legal_name="Sameiet Haslum Elvepark Rekkehus",
+        org_form="Sameie",
+    )
+    assert len(jobs_sameie) == 0, "Housing sameiet must not extract corporate job vacancies"
+
+    jobs_brl = extract_job_facts(
+        page_content="<html><body><h2>Ledige stillinger</h2><a href='/job/1'>Eiendomsmegler</a></body></html>",
+        page_url="https://karriere.solibo.no",
+        legal_name="Borettslaget Dalsbergstien 22 A",
+        org_form="Borettslag",
+    )
+    assert len(jobs_brl) == 0, "Borettslag must not extract property manager career portal vacancies"
+
+
+def test_eccera_model_careers_extraction():
+    """Verify that a corporate company with its own careers page extracting vacancies works as the model."""
+    careers_html = """
+    <html>
+      <head><title>Karriere hos Eccera Nordic Holding</title></head>
+      <body>
+        <h1>Bli en del av teamet</h1>
+        <p>Vi ansetter dyktige fagfolk.</p>
+        <div class="jobs-list">
+          <a href="/karriere/senior-investment-analyst">Senior Investment Analyst</a>
+          <a href="/karriere/finance-manager">Finance Manager</a>
+        </div>
+      </body>
+    </html>
+    """
+    jobs = extract_job_facts(
+        page_content=careers_html,
+        page_url="https://ecceranordic.no/karriere",
+        legal_name="Eccera Nordic Holding AS",
+        org_form="Aksjeselskap",
+    )
+    hiring_status = next((f.value for f in jobs if f.field_name == "hiring_status"), None)
+    titles = [f.value for f in jobs if f.field_name == "job_title"]
+
+    assert hiring_status == "active_hiring"
+    assert "Senior Investment Analyst" in titles
+    assert "Finance Manager" in titles
+
+
+def test_envelope_always_has_non_empty_summary():
+    """Verify that build_terminal_envelope ALWAYS provides a 2-3 sentence summary describing what the company does and how the last year went."""
+    facts = [
+        CompanyFact(
+            field_name="legal_name",
+            value="Nordic Software AS",
+            source_name="Enhetsregisteret",
+            source_url="https://api.test/enhet",
+        ),
+        CompanyFact(
+            field_name="org_form_description",
+            value="Aksjeselskap",
+            source_name="Enhetsregisteret",
+            source_url="https://api.test/enhet",
+        ),
+        CompanyFact(
+            field_name="nace_description",
+            value="Programmeringstjenester",
+            source_name="Enhetsregisteret",
+            source_url="https://api.test/enhet",
+        ),
+        CompanyFact(
+            field_name="revenue",
+            value=18500000.0,
+            unit="NOK",
+            as_of=date(2024, 12, 31),
+            source_name="Regnskapsregisteret",
+            source_url="https://api.test/regnskap",
+        ),
+        CompanyFact(
+            field_name="revenue",
+            value=14200000.0,
+            unit="NOK",
+            as_of=date(2023, 12, 31),
+            source_name="Regnskapsregisteret",
+            source_url="https://api.test/regnskap",
+        ),
+    ]
+    # Profile created without setting executive_summary
+    profile = CompanyProfile(orgnr="987123456", facts=facts)
+    assert profile.executive_summary is None
+
+    envelope = build_terminal_envelope(
+        orgnr="987123456",
+        run_id="run-summary-guarantee",
+        started_at=datetime.now(timezone.utc),
+        completed_at=datetime.now(timezone.utc),
+        profile=profile,
+    )
+
+    # Top-level summary, synthesis, and claims must NEVER be empty
+    assert envelope["summary"] is not None
+    assert envelope["synthesis"] is not None
+    assert len(envelope["summary"]) > 50
+
+    summary_text = envelope["summary"]
+    # What the company does:
+    assert "Nordic Software AS" in summary_text
+    assert "programmeringstjenester" in summary_text.lower()
+    # How the last year went:
+    assert "2024" in summary_text
+    assert "18 500 000" in summary_text or "18,500,000" in summary_text
+    assert "increase" in summary_text.lower()
+
+
+def test_social_links_extraction_and_noise_filtering():
+    """Verify that extract_social_links captures genuine profile links and filters out share dialogs."""
+    html_page = """
+    <html>
+      <body>
+        <footer>
+          <a href="https://www.linkedin.com/company/eccera-nordic/">Follow us on LinkedIn</a>
+          <a href="https://www.linkedin.com/shareArticle?mini=true&url=test">Share on LinkedIn</a>
+          <a href="https://facebook.com/ecceranordic">Facebook</a>
+          <a href="https://facebook.com/sharer/sharer.php?u=test">Share</a>
+          <a href="https://instagram.com/eccera_nordic">Instagram</a>
+          <a href="https://x.com/ecceranordic">X</a>
+          <a href="https://github.com/eccera">GitHub</a>
+          <a href="https://youtube.com/@ecceranordic">YouTube</a>
+        </footer>
+      </body>
+    </html>
+    """
+    social_facts = extract_social_links(html_page, "https://ecceranordic.no")
+    fields = {f.field_name: f.value for f in social_facts}
+
+    assert fields.get("linkedin_url") == "https://www.linkedin.com/company/eccera-nordic"
+    assert fields.get("facebook_url") == "https://www.facebook.com/ecceranordic"
+    assert fields.get("instagram_url") == "https://www.instagram.com/eccera_nordic"
+    assert fields.get("twitter_url") == "https://x.com/ecceranordic"
+    assert fields.get("github_url") == "https://github.com/eccera"
+    assert fields.get("youtube_url") == "https://www.youtube.com/@ecceranordic"
+
+
+def test_news_search_requires_company_name():
+    """Verify news extractor only accepts articles that name the company."""
+    # Case A: Article does NOT mention the target company
+    generic_news_html = """
+    <html>
+      <body>
+        <div class="news-post">
+          <h3>Markedet for næringseiendom i Oslo opplever sterk vekst</h3>
+          <time datetime="2026-09-01">2026-09-01</time>
+          <p>Generell rapport om rentenivåer og makroøkonomi i det norske markedet.</p>
+        </div>
+      </body>
+    </html>
+    """
+    facts_unrelated = extract_website_public_activity(
+        page_content=generic_news_html,
+        page_url="https://example.com/nyheter",
+        legal_name="Eccera Nordic Holding AS",
+        orgnr="923609016",
+    )
+    news_unrelated = [f for f in facts_unrelated if f.field_name == "latest_news_title"]
+    assert len(news_unrelated) == 0, "Unrelated article not naming company must not be extracted"
+
+    # Case B: Article DOES name the company
+    company_news_html = """
+    <html>
+      <body>
+        <div class="news-post">
+          <h3>Eccera Nordic Holding fullfører strategisk oppkjøp</h3>
+          <time datetime="2026-09-01">2026-09-01</time>
+          <p>Eccera Nordic Holding styrker sin portefølje med nye investeringer.</p>
+        </div>
+      </body>
+    </html>
+    """
+    facts_related = extract_website_public_activity(
+        page_content=company_news_html,
+        page_url="https://example.com/nyheter",
+        legal_name="Eccera Nordic Holding AS",
+        orgnr="923609016",
+    )
+    news_related = [f for f in facts_related if f.field_name == "latest_news_title"]
+    assert len(news_related) == 1
+    assert "Eccera Nordic Holding" in news_related[0].value
+

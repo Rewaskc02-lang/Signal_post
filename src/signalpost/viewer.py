@@ -156,6 +156,12 @@ def render_terminal_profile(envelope: dict[str, Any]) -> str:
         ("Contact Email", "contact_email"),
         ("Contact Phone", "contact_phone"),
         ("Investor Relations", "investor_url"),
+        ("LinkedIn Profile", "linkedin_url"),
+        ("Facebook Page", "facebook_url"),
+        ("Instagram", "instagram_url"),
+        ("Twitter / X", "twitter_url"),
+        ("YouTube Channel", "youtube_url"),
+        ("GitHub Profile", "github_url"),
     ]
     has_any_web = False
     for label, f_key in web_fields:
@@ -421,6 +427,16 @@ def generate_html_report(envelopes: list[dict[str, Any]], output_path: Any, titl
 
         if careers_url:
             c_html += f"""          <div class="fact-item"><div class="fact-lbl">Careers Portal</div><div class="fact-val"><a href="{html.escape(str(careers_url))}" target="_blank" rel="noopener" class="ext-link">Open Jobs Portal <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg></a></div></div>
+"""
+
+        # Social Presence Links
+        social_links_items = []
+        for s_platform, s_key in [("LinkedIn", "linkedin_url"), ("Facebook", "facebook_url"), ("Instagram", "instagram_url"), ("X", "twitter_url"), ("YouTube", "youtube_url"), ("GitHub", "github_url")]:
+            s_val = extract_claim_value(claims_map, s_key, default="")
+            if s_val:
+                social_links_items.append(f'<a href="{html.escape(str(s_val))}" target="_blank" rel="noopener" class="ext-link">{s_platform}</a>')
+        if social_links_items:
+            c_html += f"""          <div class="fact-item"><div class="fact-lbl">Social Profiles</div><div class="fact-val">{' • '.join(social_links_items)}</div></div>
 """
 
         if legal_status:
