@@ -2,7 +2,7 @@
 
 **Checked:** 2026-11-02  
 **Code revision requested for evaluation:** `4d01524d86ec94cc3b518305ae0bb36c67e897ad`  
-**Latest local documentation revision:** `6c7d964381df06153cf515c86783a901c5dbee62`
+**Latest local documentation revision at report generation:** `5e463470a770309b3723cdfc22bc253606430add`
 
 ## Delivery status
 
@@ -82,4 +82,3 @@ Using the local served UI in a real browser:
 3. The 1,850-request estimate for 1,000 companies is not a measured result.
 4. Website, jobs, and public-activity recall remains the largest expected scoring risk.
 5. Per-envelope request counts should not be used for aggregate resource reporting under concurrent execution.
-
