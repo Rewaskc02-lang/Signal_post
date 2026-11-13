@@ -91,6 +91,8 @@ https://github.com/Rewaskc02-lang/Signal_post/blob/main/SUBMISSION.md
 Rerun-readiness measurements:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/rerun_readiness_report.md
 
+Please acknowledge receipt of commit fc83538f675e7a83e8f27b2aad7c3436399cf7aa as the exact revision to use for the Wednesday 18 November re-score.
+
 Thank you for your review and support!
 
 Best regards,

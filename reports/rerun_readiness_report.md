@@ -71,7 +71,8 @@ Using the local served UI in a real browser:
 - Profile pages displayed fact values, source URLs, retrieval timestamps, periods, and SHA-256 hashes.
 - A 320px viewport showed no horizontal body overflow.
 - The C300-specific 300-profile output was not available, so empty-state behavior for that exact batch remains unverified.
-- Comparison controls are present in the current UI, but an end-to-end two-profile interaction was not accepted by the shared browser automation and remains a follow-up verification item.
+- Comparison was verified end to end on two generated profiles: both checkboxes toggled, the compare panel opened, and it displayed both company names, organisation numbers, state, city, and industry.
+- The C300-specific 300-profile output was not available, so empty-state behavior for that exact batch remains unverified.
 
 ## Remaining risks
 
