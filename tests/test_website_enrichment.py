@@ -85,7 +85,7 @@ async def test_enrich_from_website_unverified_returns_zero_facts(capsys: pytest.
     </html>
     """
 
-    with respx.mock() as respx_mock:
+    with respx.mock(assert_all_called=False) as respx_mock:
         respx_mock.get(website).respond(status_code=200, text=unrelated_html, headers={"content-type": "text/html"})
 
         facts = await enrich_from_website(website, orgnr, legal_name)
@@ -148,6 +148,75 @@ async def test_enrich_from_website_with_status_explicit_states() -> None:
     assert "website_description" in facts_map
     assert facts_map["website_description"].value == "Official site."
     assert facts_map["website_description"].extraction_method == "html_meta"
+
+
+@pytest.mark.asyncio
+async def test_enrich_from_website_follows_verified_company_careers_and_news_links() -> None:
+    from signalpost.extractors.website_enrichment import enrich_from_website_with_status
+
+    website = "https://www.example.no"
+    orgnr = "923609016"
+    legal_name = "EXAMPLE AS"
+    homepage = """
+    <html>
+      <body>
+        <p>EXAMPLE AS, org.nr. 923609016</p>
+        <a href="/karriere">Karriere</a>
+        <a href="/nyheter">Nyheter</a>
+      </body>
+    </html>
+    """
+    careers = """
+    <html>
+      <body>
+        <h1>EXAMPLE AS Karriere</h1>
+        <p>Org.nr. 923609016</p>
+        <a href="/stillinger/utvikler">Utvikler</a>
+        <p>1 ledige stillinger</p>
+      </body>
+    </html>
+    """
+    news = """
+    <html>
+      <body>
+        <h1>EXAMPLE AS Nyheter</h1>
+        <p>Org.nr. 923609016</p>
+        <article class="news">
+          <h2>EXAMPLE AS åpner nytt kontor</h2>
+          <time datetime="2026-10-01">1.10.2026</time>
+        </article>
+      </body>
+    </html>
+    """
+
+    with respx.mock(assert_all_called=False) as respx_mock:
+        respx_mock.get(f"{website}/karriere").respond(
+            status_code=200,
+            text=careers,
+            headers={"content-type": "text/html"},
+        )
+        respx_mock.get(f"{website}/nyheter").respond(
+            status_code=200,
+            text=news,
+            headers={"content-type": "text/html"},
+        )
+        respx_mock.get(website).respond(
+            status_code=200,
+            text=homepage,
+            headers={"content-type": "text/html"},
+        )
+
+        facts, status = await enrich_from_website_with_status(
+            website,
+            orgnr,
+            legal_name,
+        )
+
+    assert status == "available"
+    assert any(f.field_name == "job_openings_count" and f.value == 1 for f in facts)
+    assert any(f.field_name == "latest_news_title" for f in facts)
+    assert any(f.source_url.endswith("/karriere") for f in facts if f.field_name == "job_openings_count")
+    assert any(f.source_url.endswith("/nyheter") for f in facts if f.field_name == "latest_news_title")
 
 
 @pytest.mark.asyncio

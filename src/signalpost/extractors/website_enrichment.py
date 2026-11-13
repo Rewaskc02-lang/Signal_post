@@ -78,6 +78,15 @@ def clean_website_domain(url: str) -> str:
     return cleaned
 
 
+def root_domain(url: str) -> str:
+    """Return the registrable domain used to constrain linked-page fetches."""
+    host = urllib.parse.urlparse(normalize_url(url)).netloc.lower().split(":")[0]
+    if host.startswith("www."):
+        host = host[4:]
+    parts = host.split(".")
+    return ".".join(parts[-2:]) if len(parts) >= 2 else host
+
+
 def is_restricted_domain(url: str) -> bool:
     """Check if URL or domain touches any restricted policy domain."""
     dom = clean_website_domain(url)
@@ -731,6 +740,129 @@ async def enrich_from_website_with_status(
                 content_hash=content_hash,
             )
             facts.extend(activity_facts)
+
+            # Follow at most one same-company careers link and one same-company
+            # news link. Each page must remain on the verified root domain and
+            # independently contain the registered identity before emitting facts.
+            linked_pages = []
+            careers_url = next(
+                (fact.value for fact in job_facts if fact.field_name == "careers_url"),
+                None,
+            )
+            press_url = next(
+                (fact.value for fact in activity_facts if fact.field_name == "press_url"),
+                None,
+            )
+            for linked_url in (careers_url, press_url):
+                if (
+                    isinstance(linked_url, str)
+                    and linked_url != verified_url
+                    and root_domain(linked_url) == root_domain(verified_url)
+                    and linked_url not in linked_pages
+                ):
+                    linked_pages.append(linked_url)
+
+            for linked_url in linked_pages:
+                linked_started = time.perf_counter()
+                try:
+                    linked_resp = await http_client.get(linked_url, follow_redirects=True)
+                    linked_content_type = linked_resp.headers.get("content-type", "")
+                    if linked_resp.status_code != 200 or "text/html" not in linked_content_type:
+                        log_request_event(
+                            orgnr=orgnr,
+                            endpoint="website_enrichment_linked",
+                            method="GET",
+                            status_code=linked_resp.status_code,
+                            latency_ms=(time.perf_counter() - linked_started) * 1000.0,
+                            attempt=1,
+                            error="linked_page_unavailable",
+                        )
+                        continue
+
+                    linked_html = linked_resp.text
+                    resolved_linked_url = str(linked_resp.url)
+                    if root_domain(resolved_linked_url) != root_domain(verified_url):
+                        log_request_event(
+                            orgnr=orgnr,
+                            endpoint="website_enrichment_linked",
+                            method="GET",
+                            status_code=linked_resp.status_code,
+                            latency_ms=(time.perf_counter() - linked_started) * 1000.0,
+                            attempt=1,
+                            error="linked_domain_mismatch",
+                        )
+                        continue
+                    if not is_identity_verified_on_page(
+                        linked_html,
+                        orgnr,
+                        legal_name,
+                        domain=resolved_linked_url,
+                    ):
+                        log_request_event(
+                            orgnr=orgnr,
+                            endpoint="website_enrichment_linked",
+                            method="GET",
+                            status_code=linked_resp.status_code,
+                            latency_ms=(time.perf_counter() - linked_started) * 1000.0,
+                            attempt=1,
+                            error="linked_identity_unverified",
+                        )
+                        continue
+
+                    linked_hash = hashlib.sha256(linked_html.encode("utf-8")).hexdigest()
+                    linked_time = datetime.now(timezone.utc)
+                    if brreg_client is not None and hasattr(brreg_client, "record_snapshot"):
+                        brreg_client.record_snapshot(
+                            url=resolved_linked_url,
+                            orgnr=orgnr,
+                            status_code=linked_resp.status_code,
+                            content_hash=linked_hash,
+                            response_body=linked_html,
+                            content_type=linked_content_type,
+                            retrieved_at=linked_time.isoformat().replace("+00:00", "Z"),
+                        )
+
+                    if linked_url == careers_url:
+                        facts.extend(
+                            extract_job_facts(
+                                page_content=linked_html,
+                                page_url=resolved_linked_url,
+                                legal_name=legal_name,
+                                org_form=org_form,
+                                retrieved_at=linked_time,
+                                content_hash=linked_hash,
+                            )
+                        )
+                    else:
+                        facts.extend(
+                            extract_website_public_activity(
+                                page_content=linked_html,
+                                page_url=resolved_linked_url,
+                                legal_name=legal_name,
+                                orgnr=orgnr,
+                                retrieved_at=linked_time,
+                                content_hash=linked_hash,
+                            )
+                        )
+                    log_request_event(
+                        orgnr=orgnr,
+                        endpoint="website_enrichment_linked",
+                        method="GET",
+                        status_code=linked_resp.status_code,
+                        latency_ms=(time.perf_counter() - linked_started) * 1000.0,
+                        attempt=1,
+                        error=None,
+                    )
+                except Exception as exc:
+                    log_request_event(
+                        orgnr=orgnr,
+                        endpoint="website_enrichment_linked",
+                        method="GET",
+                        status_code=None,
+                        latency_ms=(time.perf_counter() - linked_started) * 1000.0,
+                        attempt=1,
+                        error=type(exc).__name__,
+                    )
 
         return facts, "available"
 
