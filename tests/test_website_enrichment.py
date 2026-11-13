@@ -232,3 +232,32 @@ def test_extract_page_title_and_meta_description_resilience() -> None:
     html_meta_3 = '<meta property="og:description" content="Official Equinor open graph profile.">'
     assert extract_meta_description(html_meta_3) == "Official Equinor open graph profile."
 
+
+def test_identity_matching_rejects_related_company_with_shared_name() -> None:
+    html = """
+    <html>
+      <head><title>Roger Aamodt Eiendom</title></head>
+      <body>Roger Aamodt Eiendom AS</body>
+    </html>
+    """
+    assert is_identity_verified_on_page(
+        html,
+        "999999999",
+        "ROGER AAMODT BYGG AS",
+        domain="rogeraamodteiendom.no",
+    ) is False
+
+
+def test_identity_matching_rejects_parent_brand_without_registered_identity() -> None:
+    html = """
+    <html>
+      <head><title>Otis Elevator Company</title></head>
+      <body>Otis Elevator Company global website.</body>
+    </html>
+    """
+    assert is_identity_verified_on_page(
+        html,
+        "999999999",
+        "OTIS AS",
+        domain="youtube.com",
+    ) is False

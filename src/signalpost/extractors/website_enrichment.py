@@ -136,10 +136,10 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
        - dot-formatted: 923.609.016
        - MVA formats: NO 923609016 MVA, NO 923 609 016 MVA, NO923609016MVA
     3. Exact normalized match of the official legal name (with HTML entities unescaped).
-    4. Base company name (without legal suffix) in page + domain or title match.
-    5. Domain name token (without TLD) in page content (self-referencing site).
-    6. Significant token overlap between page title and domain name.
-    7. Hyphenated name: any hyphen-segment of legal name appears in both domain and page.
+    4. No partial-name, domain-only, or brand-only matches are accepted.
+
+    A secondary source must identify the exact registered entity, not merely a
+    related brand, parent company, or similarly named company.
     """
     cleaned_orgnr = sanitize_orgnr(orgnr)
     if not cleaned_orgnr or len(cleaned_orgnr) != 9:
@@ -211,42 +211,6 @@ def is_identity_verified_on_page(page_content: str, orgnr: str, legal_name: str,
     norm_legal_name = normalize_text_for_matching(legal_name)
     if norm_legal_name and (norm_legal_name in norm_content or norm_legal_name in norm_plain_content):
         return True
-
-    # Prepare domain token (e.g. "cramerlaw" from "cramerlaw.no")
-    clean_dom = clean_website_domain(domain) if domain else ""
-    dom_token = clean_dom.split(".")[0] if "." in clean_dom else clean_dom
-    dom_token_alphanum = re.sub(r"[^a-z0-9]", "", dom_token.lower())
-
-    # 7. Check for base company name with expanded Norwegian corporate suffixes
-    # AS, ASA, A/S, ANS, ENK, DA, D/A, NUF, BA, SA, KS, IKS, KF, FKF, SE, BRL, Borettslag, Sameie
-    base_name = re.sub(
-        r"\s+(?:A/S|AS|ASA|ANS|ENK|D/A|DA|NUF|BA|SA|KS|IKS|KF|FKF|SE|BRL|BORETTSLAG|SAMEIET|SAMEIE)\b",
-        "",
-        legal_name,
-        flags=re.IGNORECASE,
-    ).strip()
-    norm_base = normalize_text_for_matching(base_name)
-    norm_base_alphanum = re.sub(r"[^a-z0-9]", "", norm_base)
-
-    if len(norm_base) >= 4 and (norm_base in norm_content or norm_base in norm_plain_content):
-        if dom_token_alphanum and (
-            norm_base_alphanum in dom_token_alphanum
-            or dom_token_alphanum.startswith(norm_base_alphanum)
-            or norm_base_alphanum.startswith(dom_token_alphanum)
-        ):
-            return True
-        title = extract_page_title(page_content) or ""
-        if norm_base in normalize_text_for_matching(title):
-            return True
-
-    # 8. Hyphenated name segment check
-    if " - " in legal_name:
-        for segment in legal_name.split(" - "):
-            seg_alphanum = re.sub(r"[^a-z0-9]", "", segment.strip().lower())
-            if len(seg_alphanum) >= 4:
-                if seg_alphanum in dom_token_alphanum or dom_token_alphanum.startswith(seg_alphanum[:5]):
-                    if seg_alphanum in norm_content or seg_alphanum in norm_plain_content:
-                        return True
 
     return False
 
