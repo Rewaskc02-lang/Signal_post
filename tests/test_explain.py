@@ -108,6 +108,37 @@ def test_generate_deterministic_summary() -> None:
     assert "active" in summary
     assert "21,000 registered employees" in summary
     assert "67,000,000,000 USD" in summary
+    assert summary.startswith("Buyer-relevant signal:")
+    assert "source:" in summary
+
+
+def test_generate_deterministic_summary_leads_with_dated_news() -> None:
+    profile = CompanyProfile(
+        orgnr="923609016",
+        facts=[
+            CompanyFact(
+                field_name="legal_name",
+                value="EQUINOR ASA",
+                source_name="Enhetsregisteret",
+                source_url="https://data.brreg.no/enheter/923609016",
+                confidence="official",
+            ),
+            CompanyFact(
+                field_name="latest_news_title",
+                value="Equinor opens a new office",
+                source_name="Company Press / News",
+                source_url="https://www.equinor.com/nyheter",
+                as_of=date(2026, 10, 1),
+                confidence="verified_secondary",
+            ),
+        ],
+    )
+
+    summary = generate_deterministic_summary(profile)
+    assert summary.startswith(
+        "Buyer-relevant signal: Equinor opens a new office dated 2026-10-01"
+    )
+    assert "https://www.equinor.com/nyheter" in summary
 
 
 @pytest.mark.asyncio
@@ -300,4 +331,3 @@ async def test_generate_company_summary_rejects_hallucinated_numbers() -> None:
     assert "EQUINOR ASA" in result.summary_text
     assert "1972" not in result.summary_text
     assert "999000000" not in result.summary_text
-

@@ -154,6 +154,78 @@ def generate_fact_note(fact: CompanyFact) -> str:
     return f"Verified fact from {fact.source_name} ({fact.confidence})."
 
 
+def _buyer_relevant_signal(facts_by_field: dict[str, list[CompanyFact]]) -> str:
+    """Lead summaries with one verified signal useful to a prospective buyer."""
+    news_fact = next(
+        (fact for fact in facts_by_field.get("latest_news_title", []) if fact.value),
+        None,
+    )
+    if news_fact is not None:
+        date_clause = f" dated {news_fact.as_of.isoformat()}" if news_fact.as_of else ""
+        return (
+            f"Buyer-relevant signal: {news_fact.value}{date_clause} "
+            f"(source: {news_fact.source_name}, {news_fact.source_url})."
+        )
+
+    job_count = next(
+        (fact for fact in facts_by_field.get("job_openings_count", []) if fact.value is not None),
+        None,
+    )
+    if job_count is not None:
+        return (
+            f"Buyer-relevant signal: the company listed {job_count.value} open job(s) "
+            f"(source: {job_count.source_name}, {job_count.source_url})."
+        )
+
+    job_title = next(
+        (fact for fact in facts_by_field.get("job_title", []) if fact.value),
+        None,
+    )
+    if job_title is not None:
+        return (
+            f"Buyer-relevant signal: the company listed an open role, "
+            f"“{job_title.value}” (source: {job_title.source_name}, {job_title.source_url})."
+        )
+
+    revenue = next(
+        (
+            fact for fact in facts_by_field.get("revenue", [])
+            if fact.value is not None and fact.as_of is not None
+        ),
+        None,
+    )
+    if revenue is not None:
+        year = revenue.as_of.year if isinstance(revenue.as_of, (date, datetime)) else str(revenue.as_of)
+        amount = f"{revenue.value:,.0f}" if isinstance(revenue.value, (int, float)) else str(revenue.value)
+        unit = f" {revenue.unit}" if revenue.unit else ""
+        return (
+            f"Buyer-relevant signal: reported revenue was {amount}{unit} for fiscal year {year} "
+            f"(source: {revenue.source_name}, {revenue.source_url})."
+        )
+
+    employee = next(
+        (fact for fact in facts_by_field.get("employee_count", []) if fact.value is not None),
+        None,
+    )
+    if employee is not None:
+        return (
+            f"Buyer-relevant signal: the registry reports {employee.value} employee(s) "
+            f"(source: {employee.source_name}, {employee.source_url})."
+        )
+
+    website = next(
+        (fact for fact in facts_by_field.get("website", []) if fact.value),
+        None,
+    )
+    if website is not None:
+        return (
+            "Buyer-relevant signal: no dated news, open role, or financial signal was verified; "
+            f"the primary website was verified from {website.source_name} ({website.source_url})."
+        )
+
+    return "Buyer-relevant signal: no dated company news, open job, or financial signal was verified."
+
+
 def generate_deterministic_summary(profile: CompanyProfile) -> str:
     """Generate a clean 2-4 sentence summary using deterministic rules (zero LLM cost).
 
@@ -179,15 +251,17 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
     status_fact = facts_by_field.get("status", [None])[0]
     status_str = str(status_fact.value) if status_fact and status_fact.value else "Not reported"
 
+    sentence_1 = _buyer_relevant_signal(facts_by_field)
+
     if status_str != "Not reported":
-        sentence_1 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) currently with '{status_str}' legal status."
+        sentence_2 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) currently with '{status_str}' legal status."
     else:
-        sentence_1 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) with no legal status reported in public registries."
+        sentence_2 = f"{name_str} is a Norwegian {org_form_str} (org. nr. {profile.orgnr}) with no legal status reported in public registries."
 
     if nace_desc and nace_desc.value:
-        sentence_2 = f"The company's primary registered activity is {str(nace_desc.value).lower()}."
+        sentence_3_prefix = f"The company's primary registered activity is {str(nace_desc.value).lower()}."
     else:
-        sentence_2 = "The company is officially registered in Brønnøysundregistrene."
+        sentence_3_prefix = "The company is officially registered in Brønnøysundregistrene."
 
     # Employee count handling: explicit 0 vs missing
     emp_facts = facts_by_field.get("employee_count", [])
@@ -306,7 +380,7 @@ def generate_deterministic_summary(profile: CompanyProfile) -> str:
         actual_sources.append("Regnskapsregisteret")
     source_citation = f" (Sources: Brønnøysundregistrene {', '.join(actual_sources)}, with verified SHA-256 evidence)."
 
-    return f"{sentence_1} {sentence_2} {sentence_3}{sentence_4}{source_citation}"
+    return f"{sentence_1} {sentence_2} {sentence_3_prefix} {sentence_3}{sentence_4}{source_citation}"
 
 
 def build_llm_prompt(profile: CompanyProfile) -> tuple[str, str]:
