@@ -163,10 +163,77 @@
       th,td{padding:10px 10px;font-size:.8rem}
       .view-link{padding:4px 8px;font-size:.72rem}
     }
+
+    /* Builderr-inspired research console: paper, ink, cobalt, one live signal. */
+    :root{
+      --bg-canvas:#f7f8fb;--bg-surface:#fff;--bg-card:#fff;--bg-card-hover:#f1f5ff;
+      --plum:#163c99;--plum-surface:#eef3ff;--plum-border:#c8d4ed;
+      --gold:#214aa8;--gold-hover:#17377f;--gold-surface:#edf3ff;--gold-border:#b9c9ee;
+      --text-pure:#071b3a;--text-primary:#1b2b49;--text-secondary:#61708a;--text-muted:#8b97aa;
+      --border:#d9dee8;--border-hover:#aebbd2;--radius:12px;
+    }
+    html,body{overflow-x:clip}
+    body{background:var(--bg-canvas);color:var(--text-primary)}
+    .shell{max-width:1180px;padding:0 28px 72px}
+    .challenge-strip{
+      margin:0 -28px 0;padding:10px 28px;background:#eaf0fc;border-bottom:1px solid #cbd4e3;
+      color:#23478e;font-size:.76rem;letter-spacing:.08em;text-transform:uppercase;font-weight:700;
+      display:flex;align-items:center;gap:12px;white-space:nowrap;overflow:hidden
+    }
+    .challenge-strip .signal{width:9px;height:9px;border-radius:50%;background:#279b74;box-shadow:0 0 0 4px rgba(39,155,116,.13);flex:0 0 auto}
+    .challenge-strip .quiet{color:#6d7b91;font-weight:500;letter-spacing:.04em}
+    header{
+      min-height:108px;padding:28px 0 24px;margin-bottom:34px;border-bottom:1px solid var(--border);
+      align-items:center
+    }
+    .logo{width:48px;height:48px;border-radius:14px;background:#173f9f;border:0;box-shadow:0 8px 18px rgba(23,63,159,.18)}
+    .logo svg{stroke:#fff}
+    header h1{font-size:1.6rem;color:var(--text-pure);letter-spacing:-.04em}
+    header h1 span{background:#eaf0ff;border-color:#c5d2ef;color:#214aa8;border-radius:6px;padding:4px 8px}
+    header p{color:var(--text-secondary)}
+    .compare-bar{background:#eef3ff;border-color:#b9c9ee;color:#173b83}
+    .compare-bar button{background:#214aa8;color:#fff;border-radius:7px}
+    .compare-bar button:hover{background:#17377f}
+    .stats{gap:0;margin-bottom:32px;border-top:1px solid var(--border);border-bottom:1px solid var(--border);background:#fff}
+    .stat{border:0;border-right:1px solid var(--border);border-radius:0;padding:20px 14px;text-align:left;background:transparent;box-shadow:none}
+    .stat:last-child{border-right:0}
+    .stat:hover{transform:none;box-shadow:none;background:#f7f9fd}
+    .stat .n{font-size:1.9rem;color:var(--text-pure);letter-spacing:-.05em}
+    .stat .l{color:var(--text-secondary);letter-spacing:.08em}
+    .search-bar{margin-bottom:14px}
+    .search-bar input{background:#fff;border:1px solid #cbd3e0;border-radius:8px;color:var(--text-pure);padding:16px 16px 16px 48px;box-shadow:0 5px 16px rgba(20,41,79,.04)}
+    .search-bar input:focus{border-color:#214aa8;box-shadow:0 0 0 3px rgba(33,74,168,.14)}
+    select{background:#fff;color:var(--text-primary);border-color:#cbd3e0;border-radius:7px}
+    .table-wrap{background:#fff;border-color:var(--border);border-radius:10px;box-shadow:0 10px 30px rgba(19,39,78,.05)}
+    thead{background:#f1f4f9}
+    th{color:#687892;padding:14px 16px}
+    td{border-color:#e5e8ef}
+    tr:hover td{background:#f4f7fc}
+    td.name{color:var(--text-pure)}
+    .view-link{color:#214aa8;border-color:#b9c9ee;border-radius:6px}
+    .view-link:hover{background:#214aa8;color:#fff}
+    .badge-ok{background:#e8f7f1;color:#177453;border-color:#b7e4d2}
+    .badge-na{background:#f0f2f6;color:#65728a;border-color:#d6dbe4}
+    .badge-err{background:#fff0f0;color:#b24c4c;border-color:#f0caca}
+    .compare-panel{background:#fff;border-color:var(--border);box-shadow:0 10px 30px rgba(19,39,78,.05)}
+    footer{border-top:1px solid var(--border);padding-top:22px;text-align:left;color:#738098}
+    footer a{color:#214aa8}
+    @media(max-width:640px){
+      .shell{padding:0 14px 56px}
+      .challenge-strip{margin:0 -14px;padding:10px 14px;font-size:.65rem}
+      header{padding:22px 0;margin-bottom:24px}
+      header h1{font-size:1.3rem}
+      .stats{grid-template-columns:repeat(2,1fr)}
+      .stat:nth-child(2){border-right:0}
+      .stat:nth-child(-n+2){border-bottom:1px solid var(--border)}
+      .stat{padding:16px 12px}
+    }
   </style>
 </head>
 <body>
 <div class="shell">
+
+  <div class="challenge-strip"><span class="signal" aria-hidden="true"></span><span>Open research console</span><span class="quiet">Signalpost · Norwegian company intelligence</span></div>
 
   <!-- Header -->
   <header>
