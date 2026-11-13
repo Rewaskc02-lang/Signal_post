@@ -16,7 +16,7 @@ Repository URL:
 https://github.com/Rewaskc02-lang/Signal_post
 
 Exact commit hash:
-4d01524d86ec94cc3b518305ae0bb36c67e897ad
+fc83538f675e7a83e8f27b2aad7c3436399cf7aa
 
 100-company smoke-test report URL:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/100_company_smoke_test_report.md
@@ -38,7 +38,7 @@ Models / APIs / licences:
 - Summary Model: gemini-2.5-flash / gpt-4o-mini with built-in zero-cost deterministic template fallback (zero fabricated figures).
 
 Measured representative run:
-10 companies, 32 outbound requests, 5.79 seconds, $0.00 USD with deterministic summaries.
+10 companies, 32 outbound requests, 4.26 seconds, $0.00 USD with deterministic summaries.
 The recorded 100-company smoke run reports 316 outbound requests. No unmeasured
 1,000-company projection is presented as an observed result.
 
@@ -62,12 +62,13 @@ CRITICAL EVALUATION HARDENING & NEW CAPABILITIES
 
 3. Broadened Fact Scope (People, Jobs, Public Activity):
    - Governance & Leadership: Brreg Roller extractor captures CEO (daglig leder), Board Chair (styrets leder), Auditor (revisor), and Accountant (regnskapsfører).
-   - Careers & Jobs: Discovers careers URLs, hiring status (active_hiring), and open vacancy counts from verified company pages.
-   - Public Activity & Legal Lifecycle: Captures legal status (Normal drift, Konkurs, Under avvikling), registration update dates, press release URLs, and latest corporate headlines.
+   - Careers & Jobs: Follows a same-domain careers link from a verified homepage and extracts open vacancy signals only after linked-page identity verification.
+   - Public Activity & Legal Lifecycle: Follows a same-domain news link from a verified homepage and captures dated corporate headlines only after linked-page identity verification.
    - Contact & Digital Presence: Captures verified contact email, phone, and investor relations URLs.
 
 4. Expanded Website Discovery with Strict Anti-Hallucination:
-   - Checks candidate company pages (/kontakt, /karriere, /nyheter, /om-oss) only after rigorous domain identity verification (matching 9-digit orgnr across unescaped text, grouped digits, legal name, and domain tokens).
+   - Requires the exact registered organisation number or full legal name; partial-name, brand-only, parent-company, and domain-only matches are rejected.
+   - Follows at most one same-domain careers link and one same-domain news link from a verified homepage, with independent identity verification and source snapshots.
    - Rejects parked, expired, and restricted domains (LinkedIn, Facebook, Meta).
    - Unverified identity safely emits ambiguous or not_applicable states with zero hallucinated facts.
 
@@ -82,7 +83,7 @@ CRITICAL EVALUATION HARDENING & NEW CAPABILITIES
    - Regenerate its manifest with 'python scripts/generate_ui_manifest.py --profiles profiles/ --output reports/ui/profiles_index.json'.
 
 7. Test Suite Status:
-   - 125 / 125 automated unit and integration tests passing cleanly.
+   - 129 / 129 automated unit and integration tests passing cleanly.
 
 Full documentation is available in SUBMISSION.md on main:
 https://github.com/Rewaskc02-lang/Signal_post/blob/main/SUBMISSION.md

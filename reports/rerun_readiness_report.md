@@ -1,16 +1,14 @@
 # Signalpost rerun-readiness report
 
-**Checked:** 2026-11-02  
-**Code revision requested for evaluation:** `4d01524d86ec94cc3b518305ae0bb36c67e897ad`  
-**Latest local documentation revision at report generation:** `5e463470a770309b3723cdfc22bc253606430add`
+**Checked:** 2026-11-13
+**Code revision intended for the next evaluation request:** `fc83538f675e7a83e8f27b2aad7c3436399cf7aa`
+**Previous evaluated revision:** `4d01524d86ec94cc3b518305ae0bb36c67e897ad`
 
 ## Delivery status
 
-- Local `main` is five commits ahead of `origin/main`.
-- `origin/main` currently resolves to `84f9bf36ab7d76c52d5dd93754c8b59da73c011e`.
-- The requested code revision is an ancestor of local `HEAD`, but it is not present on `origin/main`.
-- The local repository cannot confirm which commit Builderr will use for a weekend rerun. Builderr must confirm receipt of the exact hash through its required submission channel.
-- The documentation identifies `4d01524d...`, not the later documentation-only `6c7d964...` revision. Do not assume the latest local `HEAD` is scheduled.
+- The previous score ran revision `4d01524d...`; later pushes were excluded from that score.
+- The next requested evaluation revision is `fc83538f...`, containing strict identity matching, bounded same-domain news/careers enrichment, and buyer-focused deterministic summaries.
+- Builderr must confirm receipt and scheduling of `fc83538f...`; a GitHub push alone does not establish that it will be evaluated.
 
 ## C300 availability
 
@@ -34,14 +32,14 @@ python run.py --input <temporary-input.txt> \
 | Input order preserved | Yes |
 | Available / not available / failed | 10 / 0 / 0 |
 | Outbound requests | 32 |
-| Runtime | 5.79 seconds |
+| Runtime | 4.26 seconds |
 | Estimated third-party cost | $0.00 |
 | Available claims without evidence | 0 |
 | Claims with empty source URL | 0 |
 | Summary claims with semicolon-joined URL | 0 |
 | Financial missing values represented as zero | 0 |
 
-This sample demonstrates execution behavior only. It is not a C300 recall measurement.
+This sample demonstrates execution behavior only. It is not a C300 recall measurement. No linked careers/news pages occurred in this sample, so the measured request total remained 32.
 
 ## Existing 100-company artifact
 
@@ -77,8 +75,9 @@ Using the local served UI in a real browser:
 
 ## Remaining risks
 
-1. Builderr delivery/scheduling of `4d01524...` is unconfirmed.
+1. Builderr delivery/scheduling of `fc83538f...` is unconfirmed.
 2. Actual C300 input and independently checked reference findings are unavailable locally.
 3. The 1,850-request estimate for 1,000 companies is not a measured result.
 4. Website, jobs, and public-activity recall remains the largest expected scoring risk.
 5. Per-envelope request counts should not be used for aggregate resource reporting under concurrent execution.
+6. The previous evaluator found 11 wrong-company claims among 62 checked claims (51 right, 82% precision); the new identity gate specifically targets this failure, but its effect on the next score is not yet measured.

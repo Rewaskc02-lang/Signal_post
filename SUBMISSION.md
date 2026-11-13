@@ -2,7 +2,7 @@
 
 ## Repository Information
 - **Repository URL**: `https://github.com/Rewaskc02-lang/Signal_post`
-- **Commit Hash**: `4d01524d86ec94cc3b518305ae0bb36c67e897ad`
+- **Commit Hash**: `fc83538f675e7a83e8f27b2aad7c3436399cf7aa`
 - **Language & Runtime**: Python 3.11+
 - **100-Company Smoke Test Report**: [`reports/100_company_smoke_test_report.md`](https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/100_company_smoke_test_report.md)
 - **Interactive Visual Dashboard**: [`reports/ui/index.html`](https://github.com/Rewaskc02-lang/Signal_post/blob/main/reports/ui/index.html)
@@ -74,7 +74,7 @@ Emits exactly one terminal envelope JSON object per supplied organisation number
 | Scope | Ingestion Requests | Wall-Clock Time | Registry Cost (Brreg) | LLM Summary Cost | Total Run Cost |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | **100 Companies (recorded smoke run)** | **316 requests** | **Recorded in run report** | **$0.00** (Free API) | **$0.000** deterministic | **$0.00 USD** |
-| **10 Companies (measured representative run)** | **32 requests** | **5.79s** | **$0.00** (Free API) | **$0.000** deterministic | **$0.00 USD** |
+| **10 Companies (measured representative run)** | **32 requests** | **4.26s** | **$0.00** (Free API) | **$0.000** deterministic | **$0.00 USD** |
 
 - **Strict Challenge Budget Compliance**:
   - Request Limit: The recorded 100-company run used 316 requests; the 10-company measured run used 32. The 1,000-company estimate is not claimed as measured.
